@@ -40,6 +40,6 @@ dataSource.initialize()
       }
     );
   })
-  .catch((err) => {
+  .catch((err: any) => {
     console.error("Error during Data Source initialization:", err);
   });

@@ -47,7 +47,7 @@ const logData = (req: Request) => {
 
 import axios from 'axios';
 import { dataSource } from "../app-data-source";
-import { Message } from "../entities/message.entity";
+import { CopiaBroker } from "../entities/copia-broker.entity";
 interface RequestBody {
     sender: string;
     urgente: 0 | 1;
@@ -79,8 +79,6 @@ const execute = async function (req: Request, res: Response) {
     const { body } = req;
     const { env: { JWT_SECRET } } = process;
 
-    console.log('AAAAAAAAAAAAAAA');
-
     if (!body) {
         console.error(new Error('invalid jwtdata'));
         return res.status(401).end();
@@ -89,9 +87,6 @@ const execute = async function (req: Request, res: Response) {
         console.error(new Error('jwtSecret not provided'));
         return res.status(401).end();
     }
-
-    console.log('BBBBBBBBBBBBBBBBBBBB');
-    console.log(body);
 
     verify(
         body.toString('utf8'),
@@ -102,9 +97,6 @@ const execute = async function (req: Request, res: Response) {
                 console.error(err);
                 return res.status(401).end();
             }
-
-            console.log('CCCCCCCCCCCCCCCCCCCCC');
-            console.log(decoded);
 
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
                 const requestBody: Partial<RequestBody> = { sender: 'Claro', urgente: 1, validar: 0 };
@@ -124,9 +116,6 @@ const execute = async function (req: Request, res: Response) {
                     !bill_number ||
                     !source
                 ) return res.status(400).send(`Input parameter is missing.`);
-
-                console.log('DDDDDDDDDDDDDDDDD');
-                console.log(smsAction);
 
                 if (smsAction === SmsAction.SEND) {
                     requestBody.mensaje = message;
@@ -177,17 +166,28 @@ const execute = async function (req: Request, res: Response) {
     
                     return res.status(200).send(output);
                 } else if (smsAction === SmsAction.SAVE) {
-                    console.log('EEEEEEEEEEEEEEEEEEE');
-                    console.log({
-                        message,
-                        bill_number,
-                        source,
-                    });
-                    await dataSource.getRepository(Message).insert({
-                        message,
-                        bill_number,
-                        source,
-                    });
+                    await dataSource.getRepository(CopiaBroker).query(`
+                        insert into copiabroker
+                        (BROUO_KEY_SUBPARTITION,
+                        BROUO_ID,
+                        BROUO_INST_ID,
+                        BROUO_CLU_BILL_NUMBER,
+                        BROUO_ACION_DATE,
+                        BROUO_SYSTEM_DATE,
+                        BROUO_EXPIRE_DATE,
+                        BROUO_STATUS,
+                        BROUO_SEC_ERR_CODE,
+                        BROUO_USR_ID,
+                        BROUO_PRIORITY,
+                        BROUO_SUBJECT,
+                        BROUO_MESSAGE_TEXT,
+                        BROUO_CALLBACK_NUMBER)
+                        values 
+                        ((concat('O_0', mod(CTI24015.seq_brouo_id.currval,'3')+1)),
+                        CTI24015.SEQ_BROUO_ID.nextval,1,${bill_number},(systimestamp),
+                        (systimestamp),(systimestamp)+ 1/24,'P',0,
+                        'ITMKTAR',1,'', '${message}', '${source}')
+                    `);
                     return res.status(200).send({ brokerStatus: true });
                 }
             } else {

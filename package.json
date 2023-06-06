@@ -30,6 +30,7 @@
     "jsforce": "^1.9.3",
     "jsonwebtoken": "^8.5.1",
     "njwt": "^1.0.0",
+    "oracledb": "^5.5.0",
     "path": "^0.12.7",
     "pg": "^8.4.0",
     "postmonger": "^0.0.16",
