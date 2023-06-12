@@ -150,7 +150,12 @@ const execute = async function (req: Request, res: Response) {
                 }
                 if (!packsType || !cellularNumber || !packFinal || !packMsj) return res.status(400).send('Input parameter is missing.');
 
-                specialConsoleLog(cellularNumber, 'OFFER_CA_INPUT', { start: null, end: null }, decoded);
+                specialConsoleLog({
+                    phoneNumber: cellularNumber,
+                    eventName: 'OFFER_CA_INPUT',
+                    durationTimestamps: { start: null, end: null },
+                    data: decoded,
+                });
 
                 let offersApiChannel: string | null = null;
                 switch (packsType) {
@@ -186,7 +191,12 @@ const execute = async function (req: Request, res: Response) {
                         offersRequestDurationTimestamps.end = performance.now();
                         if (err.response) {
                             const { data, status } = err.response;
-                            specialConsoleLog(cellularNumber!, 'OFFERS_REQUEST_FAILED', offersRequestDurationTimestamps, { data, status });
+                            specialConsoleLog({
+                                phoneNumber: cellularNumber!,
+                                eventName: 'OFFERS_REQUEST_FAILED',
+                                durationTimestamps: offersRequestDurationTimestamps,
+                                data: { data, status },
+                            });
                         }
                         console.log('Error when calling the offers API:');
                         console.log(err);
@@ -197,12 +207,12 @@ const execute = async function (req: Request, res: Response) {
                 let packFound = null;
                 if (offersApiResponse) {
                     if (offersApiResponse.data) {
-                        specialConsoleLog(
-                            cellularNumber,
-                            'OFFERS_RESPONSE',
-                            offersRequestDurationTimestamps,
-                            offersApiResponse.data,
-                        );
+                        specialConsoleLog({
+                            phoneNumber: cellularNumber,
+                            eventName: 'OFFERS_RESPONSE',
+                            durationTimestamps: offersRequestDurationTimestamps,
+                            data: offersApiResponse.data,
+                        });
                     }
                     try {
                         for (const service of offersApiResponse.data.offerServices) {
@@ -260,7 +270,12 @@ const execute = async function (req: Request, res: Response) {
                     error: packsValidationFailed
                 };
     
-                specialConsoleLog(cellularNumber, 'OFFER_CA_OUTPUT', { start: null, end: null }, response);
+                specialConsoleLog({
+                    phoneNumber: cellularNumber,
+                    eventName: 'OFFER_CA_OUTPUT',
+                    durationTimestamps: { start: null, end: null },
+                    data: response
+                });
     
                 return res.status(200).send(response);
             } else {
@@ -346,12 +361,17 @@ function millisToMinutesAndSeconds(millis: number): string {
     return Number(seconds) == 60 ? minutes + 1 + 'm' : minutes + 'm ' + (Number(seconds) < 10 ? '0' : '') + seconds + 's';
 }
 
-function specialConsoleLog (
+export function specialConsoleLog ({
+    phoneNumber,
+    eventName,
+    durationTimestamps,
+    data,
+}: {
     phoneNumber: string,
     eventName: string,
     durationTimestamps: DurationTimestampsPair,
     data: any,
-): void {
+}): void {
     const now = new Date();
     const todayDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
