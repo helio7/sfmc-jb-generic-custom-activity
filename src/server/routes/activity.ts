@@ -48,7 +48,7 @@ const logData = (req: Request) => { // Log data from the request and put it in a
 }
 
 interface InputParamenter {
-    packsType?: string;
+    packsType?: PacksType;
     cellularNumber?: string;
     packFinal?: string;
     mensajeVariables?: string;
@@ -111,9 +111,25 @@ interface ResponseBody {
     }[];
 }
 
+enum PacksType {
+    NOCHE = 'noche',
+    REN_GIG = 'ren_gig',
+    UPC = 'upc',
+    MS = 'ms',
+    COM_SCO = 'com_sco',
+}
+
+const API_CHANNELS_BY_PACKS_TYPE = {
+    [PacksType.NOCHE]: 'PDC',
+    [PacksType.REN_GIG]: 'PDC',
+    [PacksType.UPC]: 'PDC',
+    [PacksType.MS]: 'SF',
+    [PacksType.COM_SCO]: 'PDC',
+};
+
 const execute = async function (req: Request, res: Response) {
     const { body } = req;
-    const { env: { JWT_SECRET } } = process;
+    const { env: { JWT_SECRET, CLARO_OFFERS_API_URL } } = process;
 
     if (!body) {
         console.error(new Error('invalid jwtdata'));
@@ -134,21 +150,26 @@ const execute = async function (req: Request, res: Response) {
                 return res.status(401).end();
             }
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-
-                const { CLARO_OFFERS_API_URL} = process.env;
-
-                let packsType: string | null = null;
+                let packsType: PacksType | null = null;
                 let cellularNumber: string | null = null;
-                let packFinal: string | null = null;
-                let packMsj: string | null = null;
+                let packId: string | null = null;
+                let messageTemplate: string | null = null;
                 for (const argument of decoded.inArguments) {
                     if (argument.packsType) packsType = argument.packsType;
                     else if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-                    else if (argument.packFinal) packFinal = argument.packFinal;
-                    else if (argument.mensajeVariables) packMsj = argument.mensajeVariables;
-                    if (packsType && cellularNumber && packFinal && packMsj) break;
+                    else if (argument.packFinal) packId = argument.packFinal;
+                    else if (argument.mensajeVariables) messageTemplate = argument.mensajeVariables;
+                    if (packsType && cellularNumber && packId && messageTemplate) break;
                 }
-                if (!packsType || !cellularNumber || !packFinal || !packMsj) return res.status(400).send('Input parameter is missing.');
+                if (!packsType || !cellularNumber || !packId || !messageTemplate) return res.status(400).send('Input parameter is missing.');
+
+                const { NOCHE, UPC, MS, REN_GIG, COM_SCO } = PacksType;
+
+                if (![NOCHE, UPC, MS, REN_GIG, COM_SCO].includes(packsType)) {
+                    const errorMessage = `Invalid packs type: ${packsType}`;
+                    console.log(errorMessage);
+                    return res.status(400).end(errorMessage);
+                }
 
                 specialConsoleLog({
                     phoneNumber: cellularNumber,
@@ -157,20 +178,6 @@ const execute = async function (req: Request, res: Response) {
                     data: decoded,
                 });
 
-                let offersApiChannel: string | null = null;
-                switch (packsType) {
-                    case 'upc':
-                        offersApiChannel = 'PDC';
-                        break;
-                    case 'ms':
-                        offersApiChannel = 'SF';
-                        break;
-                    default:
-                        const errorMessage = `Invalid packs type: ${packsType}`;
-                        console.log(errorMessage);
-                        return res.status(400).end(errorMessage);
-                }
-
                 const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
                 let packsValidationFailed = false;
                 const offersApiResponse: { data: ResponseBody } | null = await axios({
@@ -178,7 +185,7 @@ const execute = async function (req: Request, res: Response) {
                     url: CLARO_OFFERS_API_URL,
                     data: {
                         billNumber: Number(cellularNumber),
-                        channel: offersApiChannel,
+                        channel: API_CHANNELS_BY_PACKS_TYPE[packsType],
                         services: ["GPRS"],
                     } as RequestBody,
                     headers: {
@@ -217,7 +224,7 @@ const execute = async function (req: Request, res: Response) {
                     try {
                         for (const service of offersApiResponse.data.offerServices) {
                             for (const pack of service.offerPacks) {
-                                if (pack.packId === packFinal && pack.canBePurchased === true) {
+                                if (pack.packId === packId && pack.canBePurchased === true) {
                                     packFound = pack;
                                     break;
                                 }
@@ -256,7 +263,7 @@ const execute = async function (req: Request, res: Response) {
 
                     const discountValue = getDiscountValueFromPackDescription(description);
 
-                    messageToSend = packMsj
+                    messageToSend = messageTemplate
                         .trim()
                         .replace('#C#', `${initialVolume}${initialUnit}`)
                         .replace('#V#', `${volumeTime} ${volumeTime === 1 ? unitsTimeWord.singular : unitsTimeWord.plural}`)
