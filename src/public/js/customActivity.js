@@ -1,3 +1,40 @@
+const CONSIDERED_PACK_TYPES = {
+    NOCHE: 'noche',
+    REN_GIG: 'ren_gig',
+    UPC: 'upc',
+    MS: 'ms',
+    COM_SCO: 'com_sco',
+};
+
+const DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE = {
+    [CONSIDERED_PACK_TYPES.NOCHE]: 'noche',
+    [CONSIDERED_PACK_TYPES.REN_GIG]: 'renov_gigant',
+    [CONSIDERED_PACK_TYPES.UPC]: 'upc',
+    [CONSIDERED_PACK_TYPES.MS]: 'segmento',
+    [CONSIDERED_PACK_TYPES.COM_SCO]: 'modl_comprdr',
+};
+
+const { NOCHE, REN_GIG, UPC, MS, COM_SCO } = CONSIDERED_PACK_TYPES;
+
+function selectCompradorScoringPacksType() {
+    document.getElementById("compradorScoringPacksTypeOptionsDiv").style.display = "block";
+    connection.trigger("requestInteraction");
+}
+
+function unselectCompradorScoringPacksType() {
+    document.getElementById("compradorScoringPacksTypeOptionsDiv").style.display = "none";
+    connection.trigger("requestInteraction");
+}
+
+function getPacksType() {
+    let caPacksType;
+    for (const packsType of [NOCHE, REN_GIG, UPC, MS, COM_SCO]) {
+        if (document.getElementById(`packs-type-${packsType}`).checked) caPacksType = packsType;
+        break;
+    }
+    return caPacksType;
+}
+
 define(['postmonger'], (Postmonger) => {
     'use strict';
 
@@ -25,49 +62,38 @@ define(['postmonger'], (Postmonger) => {
         let packsTypeIdSuffix = packsTypeArg && packsTypeArg.packsType ? packsTypeArg.packsType : null;
         if (!packsTypeIdSuffix) throw new Error(`Invalid pack type ID suffix: ${packsTypeIdSuffix}`);
         document.getElementById(`packs-type-${packsTypeIdSuffix}`).checked = true;
+
+        if (packsTypeArg.packsType === COM_SCO) selectCompradorScoringPacksType();
+        else unselectCompradorScoringPacksType();
+
+        const packsType = getPacksType();
+        if (packsType === COM_SCO) {
+            const comScoModelNumberArg = inArguments.find(arg => arg.comScoModelNumber);
+            if (comScoModelNumberArg) {
+                document.getElementById('compradorScoringPacksTypeModelNumber').value = comScoModelNumberArg.comScoModelNumber;
+            }
+        }
     });
 
     connection.on('clickedNext', () => {
-        let packsType = null;
-        let attributeKeyWord = null;
-
-        const CONSIDERED_PACK_TYPES = {
-            NOCHE: 'noche',
-            REN_GIG: 'ren_gig',
-            UPC: 'upc',
-            MS: 'ms',
-            COM_SCO: 'com_sco',
-        };
-
-        const { NOCHE, REN_GIG, UPC, MS, COM_SCO } = CONSIDERED_PACK_TYPES;
-
-        if (document.getElementById(`packs-type-${NOCHE}`).checked) {
-            packsType = NOCHE;
-            attributeKeyWord = 'noche';
-        }
-        if (document.getElementById(`packs-type-${REN_GIG}`).checked) {
-            packsType = REN_GIG;
-            attributeKeyWord = 'renov_gigant';
-        }
-        else if (document.getElementById(`packs-type-${UPC}`).checked) {
-            packsType = UPC;
-            attributeKeyWord = 'upc';
-        }
-        else if (document.getElementById(`packs-type-${MS}`).checked) {
-            packsType = MS;
-            attributeKeyWord = 'segmento';
-        } else if (document.getElementById(`packs-type-${COM_SCO}`).checked) {
-            packsType = COM_SCO;
-            attributeKeyWord = '1modl_comprdr';
-        } else throw new Error('No pack type was selected.');
+        const packsType = getPacksType();
 
         if (![NOCHE, REN_GIG, UPC, MS, COM_SCO].includes(packsType)) throw new Error(`Invalid pack type: ${packsType}`);
+
+        const comScoModelNumber = document.getElementById("compradorScoringPacksTypeModelNumber").value;
+
+        let attributeKeyWord;
+
+        if (packsType === COM_SCO) attributeKeyWord = comScoModelNumber;
+
+        attributeKeyWord += DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE[packsType];
 
         payload['arguments'].execute.inArguments = [
             { packsType },
             { cellularNumber: `{{Contact.Attribute."Clientes Cluster Prepago".cellular_number}}` },
             { packFinal: `{{Contact.Attribute."Clientes Cluster Prepago".pack_${attributeKeyWord}_final}}` },
             { mensajeVariables: `{{Contact.Attribute."Clientes Cluster Prepago".pack_${attributeKeyWord}_msj}}` },
+            { comScoModelNumber: Number(comScoModelNumber) },
         ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);

@@ -21,7 +21,7 @@ hr {
 .main-block {
    max-width: 340px;
    min-height: 400px;
-   padding: 10px 0;
+   padding: 10px 0px 20px 0px;
    margin: auto;
    border-radius: 5px;
    border: solid 1px #ccc;
@@ -48,6 +48,10 @@ input[type=text], input[type=password] {
    border: solid 1px #cbc9c9;
    box-shadow: 1px 2px 5px rgba(0,0,0,.09);
    background: #fff;
+}
+
+input[type='number']{
+   width: 80px;
 }
 
 #icon {

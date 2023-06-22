@@ -19,7 +19,8 @@
                 { "packsType": "" },
                 { "cellularNumber": "" },
                 { "packFinal": "" },
-                { "mensajeVariables": "" }
+                { "mensajeVariables": "" },
+                { "comScoModelNumber": 0 }
             ],
             "outArguments": [
                 { "puedeComprar": false },
@@ -94,6 +95,11 @@
                         },
                         "mensajeVariables": {
                             "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "comScoModelNumber": {
+                            "dataType": "Number",
                             "isNullable": false,
                             "direction": "in"
                         }
