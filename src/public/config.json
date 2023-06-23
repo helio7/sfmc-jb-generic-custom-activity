@@ -9,17 +9,25 @@
     "lang": {
         "en-US": {
             "name": "DINAMICALLY_REPLACED",
-            "description": "Presta",
+            "description": "Prepara un mensaje de Presta.",
             "step1Label": "Configure Activity"
         }
     },
     "arguments": {
         "execute": {
             "inArguments": [
-                { "cellularNumber": "" }
+                { "packsType": "" },
+                { "cellularNumber": "" },
+                { "balance": 0.0 },
+                { "packId": "" },
+                { "packPrice": 0.0 },
+                { "balanceMessageTemplate": "" },
+                { "defaultPackId": "" },
+                { "defaultPackMessageTemplate": "" },
+                { "defaultPackKeyword": "" }
             ],
             "outArguments": [
-                { "qualificationResult": "" }
+                { "mensajeTraducido": "" }
             ],
             "url": "DINAMICALLY_REPLACED",
             "headers": "DINAMICALLY_REPLACED",
@@ -72,15 +80,55 @@
             "execute": {
                 "inArguments": [
                     {
+                        "packsType": {
+                            "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
                         "cellularNumber": {
                             "dataType": "Phone",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "balance": {
+                            "dataType": "Decimal",
+                            "inNullable": false,
+                            "direction": "in"
+                        },
+                        "packId": {
+                            "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "packPrice": {
+                            "dataType": "Decimal",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "balanceMessageTemplate": {
+                            "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "defaultPackId": {
+                            "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "defaultPackMessageTemplate": {
+                            "dataType": "Text",
+                            "isNullable": false,
+                            "direction": "in"
+                        },
+                        "defaultPackKeyword": {
+                            "dataType": "Text",
                             "isNullable": false,
                             "direction": "in"
                         }
                     }
                 ],
                 "outArguments": [{
-                    "qualificationResult": {
+                    "mensajeTraducido": {
                         "dataType":"Text",
                         "direction": "out",
                         "access": "visible"

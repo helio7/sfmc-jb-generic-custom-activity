@@ -25,9 +25,24 @@
     <body>
         <div class="main-block">
             <h3>Presta</h3>
-            <span class="description-span">Verifica si la linea puede solicitar un presta.</span>
+            <span class="description-span">Prepara un mensaje de Presta.</span>
             <form action="/">
+                <br>
                 <hr>
+                <br>
+                <span >Tipo de packs</span>
+                <div class="switch-field">
+                    <input type="radio" id="packs-type-ren_gig" name="packs-type" value="ren_gig" checked/>
+                    <label for="packs-type-ren_gig">Renovable/Gigante</label>
+                    <input type="radio" id="packs-type-upc" name="packs-type" value="upc" checked/>
+                    <label for="packs-type-upc">UPC</label>
+                </div>
+                <div class="switch-field">
+                    <input type="radio" id="packs-type-ms" name="packs-type" value="ms"/>
+                    <label for="packs-type-ms">MS</label>
+                    <input type="radio" id="packs-type-com_sco" name="packs-type" value="com_sco" checked/>
+                    <label for="packs-type-com_sco">Comprador/Scoring</label>
+                </div>
             </form>
         </div>
     </body>

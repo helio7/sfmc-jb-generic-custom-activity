@@ -6,6 +6,7 @@ import http from 'http';
 import path from 'path';
 import routes from './routes';
 import activity from './routes/activity';
+import { dataSource } from './app-data-source';
 
 const app = express();
 
@@ -30,8 +31,15 @@ app.post('/journeybuilder/validate/', activity.validate);
 app.post('/journeybuilder/publish/', activity.publish);
 app.post('/journeybuilder/execute/', activity.execute);
 
-http.createServer(app).listen(
-  app.get('port'), () => {
-    console.log('Express server listening on port ' + app.get('port'));
-  }
-);
+dataSource.initialize()
+  .then(() => {
+    console.log("Data Source has been initialized!");
+    http.createServer(app).listen(
+      app.get('port'), () => {
+        console.log('Express server listening on port ' + app.get('port'));
+      }
+    );
+  })
+  .catch((err: any) => {
+    console.error("Error during Data Source initialization:", err);
+  });

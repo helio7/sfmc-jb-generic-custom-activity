@@ -5,6 +5,8 @@ import { verify } from 'jsonwebtoken';
 import uuid from 'uuid-random';
 import https from 'https';
 import axios from 'axios';
+import { dataSource } from "../app-data-source";
+import { Pack } from "../entities/pack.entity";
 
 interface ExecuteLog {
     body: any;
@@ -59,7 +61,7 @@ interface DurationTimestampsPair {
     end: number | null;
 }
 
-interface RequestBody {
+interface PrestaRequestBody {
     description: string;
     externalId: string;
     provideAlternative: boolean;
@@ -74,7 +76,7 @@ interface RequestBody {
     }[];
 }
 
-interface ResponseBody {
+interface PrestaResponseBody {
     baseType: string;
     description: string;
     effectiveQualificationDate: string;
@@ -85,7 +87,7 @@ interface ResponseBody {
     provideAlternative: boolean;
     provideOnlyAvailable: boolean;
     provideUnavailabilityReason: boolean;
-    qualificationResult: string;
+    qualificationResult: 'qualified' | 'alternate' | 'unqualified' | 'error';
     relatedParty: { id: string }[];
     serviceQualificationDate: string;
     serviceQualificationItem: {
@@ -101,14 +103,49 @@ interface ResponseBody {
             serviceSpecification: { id: string; name: string }[];
             relatedParty: { id: string; name: string; role: string }[];
         }[];
+        alternateServiceProposal?: {
+            id: string;
+            type: string;
+            service: {
+                id: string;
+                serviceCharacteristic: {
+                    name: string;
+                    value: string;
+                }[];
+            }[];
+        }[];
     }[];
     state: string;
     type: string;
 }
 
+interface AlternativeOption {
+    type?: string,
+    amount?: number,
+    serviceCost?: number,
+    freeServiceCostDays?: number,
+}
+
+interface AlternativeBalanceOption extends AlternativeOption {
+    loanDuration?: number,
+}
+
+interface AlternativePackOption extends AlternativeOption {
+    packId?: string,
+    units?: string,
+    lengthDays?: number,
+}
+
+enum PacksType {
+    REN_GIG = 'ren_gig',
+    UPC = 'upc',
+    MS = 'ms',
+    COM_SCO = 'com_sco',
+}
+
 const execute = async function (req: Request, res: Response) {
     const { body } = req;
-    const { env: { JWT_SECRET } } = process;
+    const { env: { JWT_SECRET, PRESTA_API_URL } } = process;
 
     if (!body) {
         console.error(new Error('invalid jwtdata'));
@@ -129,20 +166,42 @@ const execute = async function (req: Request, res: Response) {
                 return res.status(401).end();
             }
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-
+                let packsType: PacksType | null = null;
                 let cellularNumber: string | null = null;
+                let clientBalance: number | null = null;
+                let packId: string | null = null;
+                let packPrice: number | null = null;
+                let balanceMessageTemplate: string | null = null;
+                let defaultPackId: string | null = null;
+                let defaultPackMessageTemplate: string | null = null;
+                let defaultPackKeyword: string | null = null;
                 for (const argument of decoded.inArguments) {
+                    if (argument.packsType) packsType = argument.packsType;
                     if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+                    if (argument.balance !== undefined) clientBalance = argument.balance;
+                    if (argument.packId !== undefined) packId = argument.packId;
+                    if (argument.packPrice !== undefined) packPrice = argument.packPrice;
+                    if (argument.balanceMessageTemplate !== undefined) balanceMessageTemplate = argument.balanceMessageTemplate;
+                    if (argument.defaultPackId !== undefined) defaultPackId = argument.defaultPackId;
+                    if (argument.defaultPackMessageTemplate !== undefined) defaultPackMessageTemplate = argument.defaultPackMessageTemplate;
+                    if (argument.defaultPackKeyword !== undefined) defaultPackKeyword = argument.defaultPackKeyword;
                 }
-                if (!cellularNumber) return res.status(400).send('Input parameter is missing.');
+                if (
+                    !packsType || !cellularNumber || clientBalance === null || !packId || !packPrice ||
+                    !balanceMessageTemplate || !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
+                ) return res.status(400).send('Input parameter is missing.');
 
-                const { env: { PRESTA_API_URL } } = process;
+                const { UPC, MS, REN_GIG, COM_SCO } = PacksType;
+
+                if (![UPC, MS, REN_GIG, COM_SCO].includes(packsType)) {
+                    const errorMessage = `Invalid packs type: ${packsType}`;
+                    console.log(errorMessage);
+                    return res.status(400).end(errorMessage);
+                }
                        
                 const prestaRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
-        
                 let requestErrorHappened = false;
-
-                const prestaVerificationResponse = await axios.post<ResponseBody>(
+                const prestaVerificationResponse = await axios.post<PrestaResponseBody>(
                     `${PRESTA_API_URL}/serviceQualificationManagement/v3/servicequalification`,
                     {
                         description: `Service Qualification ${cellularNumber}`,
@@ -169,7 +228,7 @@ const execute = async function (req: Request, res: Response) {
                                 ],
                             },
                         ],
-                    } as RequestBody,
+                    } as PrestaRequestBody,
                     { httpsAgent: new https.Agent({ rejectUnauthorized: false }) },
                 )
                     .catch((error: any) => {
@@ -204,7 +263,143 @@ const execute = async function (req: Request, res: Response) {
                     prestaVerificationResponse.data
                 );
 
-                const output = { qualificationResult: prestaVerificationResponse.data.qualificationResult };
+                const prestaQualificationResult = prestaVerificationResponse.data.qualificationResult;
+
+                let message: string | null = null;
+
+                switch (prestaQualificationResult) {
+                    case 'qualified':
+                    case 'alternate':
+                        let serverError: string | null = null
+                        if (!prestaVerificationResponse.data.serviceQualificationItem) {
+                            serverError = 'Presta response is missing the "serviceQualificationItem" property';
+                        }
+                        if (!prestaVerificationResponse.data.serviceQualificationItem[0]) {
+                            serverError = 'Presta response is missing elements in the "serviceQualificationItem" property';
+                        }
+                        if (!prestaVerificationResponse.data.serviceQualificationItem[0].alternateServiceProposal) {
+                            serverError = 'Presta response is missing the "alternateServiceProposal" property';
+                        }
+                        if (serverError) return res.status(500).send(serverError);
+
+                        const balanceOptions: AlternativeBalanceOption[] = [];
+                        let packOption: AlternativePackOption | null = null;
+
+                        for (const alternateServiceProposal of prestaVerificationResponse.data.serviceQualificationItem[0].alternateServiceProposal!) {
+                            const alternativeOption: any = {};
+
+                            for (const serviceCharacteristic of alternateServiceProposal.service[0].serviceCharacteristic) {
+                                switch (serviceCharacteristic.name) {
+                                    case 'type':
+                                        alternativeOption.type = serviceCharacteristic.value;
+                                        break;
+                                    case 'loanDuration':
+                                        alternativeOption.loanDuration = Number(serviceCharacteristic.value);
+                                        break;
+                                    case 'amount':
+                                        const amount = Number(serviceCharacteristic.value);
+                                        if (typeof amount !== 'number') {
+                                            return res.status(500).send(`Invalid service characteristic 'amount' value: ${serviceCharacteristic.value}`);
+                                        }
+                                        alternativeOption.amount = Number(serviceCharacteristic.value);
+                                        break;
+                                    case 'serviceCost':
+                                        alternativeOption.serviceCost = Number(serviceCharacteristic.value);
+                                        break;
+                                    case 'freeServiceCostDays':
+                                        alternativeOption.freeServiceCostDays = Number(serviceCharacteristic.value);
+                                        break;
+                                    case 'packId':
+                                        alternativeOption.packId = serviceCharacteristic.value;
+                                        break;
+                                    case 'units':
+                                        alternativeOption.units = serviceCharacteristic.value;
+                                        break;
+                                    case 'lengthDays':
+                                        alternativeOption.lengthDays = Number(serviceCharacteristic.value);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+
+                            if (alternativeOption.type === 'BALANCES') balanceOptions.push(alternativeOption);
+                            else if (alternativeOption.type === 'PACKS_DATA') packOption = alternativeOption;
+                        }
+
+                        if (!packOption) return res.status(500).send('Presta response is missing a \'PACKS_DATA\' type alternative.');
+
+                        balanceOptions
+                            .sort((a, b) => { // Ascendent order
+                                if (a.amount! < b.amount!) return -1;
+                                else if (a.amount! > b.amount!) return 1;
+                                return 0;
+                            })
+
+                        let optionToEncourage: AlternativeBalanceOption | AlternativePackOption | null = null;
+                        for (const balanceOption of balanceOptions) {
+                            if (clientBalance + balanceOption.amount! >= packPrice) {
+                                optionToEncourage = balanceOption;
+                                break;
+                            }
+                        }
+                        if (!optionToEncourage) optionToEncourage = packOption;
+
+                        let messageTemplate: string | null = null;
+                        let packIdToSearchFor: string | null = null;
+                        if (optionToEncourage.type === 'BALANCES') {
+                            messageTemplate = balanceMessageTemplate;
+                            packIdToSearchFor = packId;
+                        }
+                        else if (optionToEncourage.type === 'PACKS_DATA') {
+                            messageTemplate = defaultPackMessageTemplate;
+                            packIdToSearchFor = defaultPackId;
+                        }
+                        else return res.status(500).send(`Invalid pack type in option to encourage: ${optionToEncourage.type}`);
+
+                        const packsFound: {
+                            PACK_ID: string,
+                            PRECIO_FINAL: number,
+                            VIGENCIA: number,
+                            CAPACIDAD_UNIDAD_PACK: string,
+                            DESCUENTO: number,
+                        }[] = await dataSource.getRepository(Pack).query(`
+                            select
+                                PACK_ID,
+                                DESCUENTO,
+                                CAPACIDAD_UNIDAD_PACK,
+                                VIGENCIA,
+                                PRECIO_FINAL
+                            from SF_PACKS_TARIFF_PREPAGO
+                            where PACK_ID = '${packIdToSearchFor}'
+                        `);
+
+                        if (!packsFound.length) return res.status(500).send(`Pack ${packIdToSearchFor} not found in DB.`);
+
+                        const {
+                            DESCUENTO,
+                            CAPACIDAD_UNIDAD_PACK,
+                            VIGENCIA,
+                            PRECIO_FINAL,
+                        } = packsFound[0];
+
+                        message = messageTemplate
+                            .trim()
+                            .replace('#D#', String(DESCUENTO))
+                            .replace('#C#', CAPACIDAD_UNIDAD_PACK)
+                            .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'días' : 'día'}`)
+                            .replace('#P#', String(PRECIO_FINAL))
+                            .replace('#K#', defaultPackKeyword);
+                        
+                        break;
+                    case 'unqualified':
+                    case 'error':
+                        return res.status(400).send('Unqualified or error.');
+                    default:
+                        return res.status(500).send();
+                }
+
+                const output = { mensajeTraducido: message };
 
                 specialConsoleLog(cellularNumber, 'PRESTA_CA_OUTPUT', { start: null, end: null }, output);
 
