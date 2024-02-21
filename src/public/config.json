@@ -9,7 +9,7 @@
     "lang": {
         "en-US": {
             "name": "DINAMICALLY_REPLACED",
-            "description": "Revisa el saldo de una linea.",
+            "description": "Revisa si la línea tiene un pack renovable pendiente de renovar.",
             "step1Label": "Configure Activity"
         }
     },

@@ -43,7 +43,7 @@ const configJson = async (req: any, res: any) => {
 		default:
 			break;
 	}
-  configJsonFile.lang["en-US"].name = `Consulta de saldo${nameEnvironmentLabel}`;
+  configJsonFile.lang["en-US"].name = `Consulta de pack renovable${nameEnvironmentLabel}`;
 	configJsonFile.configurationArguments.applicationExtensionKey = APPLICATION_EXTENSION_KEY || 'NOT_PROVIDED';
 	configJsonFile.arguments.execute.url = `${THIS_SERVER_BASE_URL}/journeybuilder/execute`;
 	configJsonFile.configurationArguments.save.url = `${THIS_SERVER_BASE_URL}/journeybuilder/save`;
