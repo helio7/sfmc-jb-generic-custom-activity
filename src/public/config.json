@@ -16,37 +16,50 @@
     "arguments": {
         "execute": {
             "inArguments": [
-                { "phone": "" }
+                { "dataExtension": "" },
+                { "cellularNumber": "" },
+                { "channel": "" }
             ],
-            "outArguments": [],
+            "outArguments": [
+                { "responseCode": ""},
+                {"responseMessage": ""},
+                {"packId": ""},
+                {"handle": ""}
+            ],
             "url": "DINAMICALLY_REPLACED",
+            "headers": "DINAMICALLY_REPLACED",
             "verb": "POST",
             "body": "",
-            "header": "",
             "format": "json",
             "useJwt": true,
-            "timeout": 10000
+            "timeout": 10000,
+            "retryCount": 3,
+			"retryDelay": 10000
         }
     },
     "configurationArguments": {
         "applicationExtensionKey": "DINAMICALLY_REPLACED",
         "save": {
             "url": "DINAMICALLY_REPLACED",
+            "headers": "DINAMICALLY_REPLACED",
             "verb": "POST",
             "useJwt": true
         },
         "publish": {
             "url": "DINAMICALLY_REPLACED",
+            "headers": "DINAMICALLY_REPLACED",
             "verb": "POST",
             "useJwt": true
         },
         "stop": {
             "url": "DINAMICALLY_REPLACED",
+            "headers": "DINAMICALLY_REPLACED",
             "verb": "POST",
             "useJwt": true
         },
         "validate": {
             "url": "DINAMICALLY_REPLACED",
+            "headers": "DINAMICALLY_REPLACED",
             "verb": "POST",
             "useJwt": true
         }
@@ -63,21 +76,41 @@
             "execute": {
                 "inArguments": [
                     {
-                        "phone": {
+                        "dataExtension": {
+                            "dataType": "Text",
+                            "isNullable": true,
+                            "direction": "in"
+                        },
+                        "cellularNumber": {
                             "dataType": "Phone",
+                            "isNullable": true,
+                            "direction": "in"
+                        },
+                        "channel": {
+                            "dataType": "Text",
                             "isNullable": false,
                             "direction": "in"
                         }
                     }
                 ],
                 "outArguments": [{
-                    "accountBalance": {
+                    "responseCode": {
                         "dataType": "Decimal",
                         "direction": "out",
                         "access": "visible"
                     },
-                    "balanceValidationFailed": {
-                        "dataType": "Boolean",
+                    "responseMessage": {
+                        "dataType": "Text",
+                        "direction": "out",
+                        "access": "visible"
+                    },
+                    "packId": {
+                        "dataType": "Text",
+                        "direction": "out",
+                        "access": "visible"
+                    },
+                    "handle": {
+                        "dataType": "Decimal",
                         "direction": "out",
                         "access": "visible"
                     }
