@@ -88,88 +88,86 @@ const execute = async function (req: Request, res: Response) {
 
         if (value === null || expiresAt < now) {
           const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
-  
-          console.log('GETTING TOKEN...');
-          const token: string = await axios({
-            method: 'post',
-            url: TOKEN_API_URL,
-            data: {
-              username: TOKEN_API_USERNAME,
-              password: TOKEN_API_PASSWORD
-            },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Token obtained.');
-              if (res.headers.authorization) return res.headers.authorization.substring(7);
-            })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
-            });
-          if (!token) balanceValidationFailed = true;
-          else {
-            req.app.locals.token = {
-              value: token,
-              expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
-            };
-          }
-        }
 
-        let accountBalance = 0.0;
-  
-        if (!balanceValidationFailed) {
-          const {
-            BALANCES_API_URL,
-            BALANCES_API_SESSION_ID,
-            BALANCES_API_CHANNEL,
-            BALANCES_API_SERVICE,
-          } = process.env;
-  
-          let phone: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.phone) {
-              phone = argument.phone;
-              break;
-            }
+          //   console.log('GETTING TOKEN...');
+          //   const token: string = await axios({
+          //     method: 'post',
+          //     url: TOKEN_API_URL,
+          //     data: {
+          //       username: TOKEN_API_USERNAME,
+          //       password: TOKEN_API_PASSWORD
+          //     },
+          //     httpsAgent,
+          //   })
+          //     .then((res: any) => {
+          //       console.log('Token obtained.');
+          //       if (res.headers.authorization) return res.headers.authorization.substring(7);
+          //     })
+          //     .catch((err: any) => {
+          //       console.log('Error:');
+          //       console.log(err);
+          //     });
+          //   if (!token) balanceValidationFailed = true;
+          //   else {
+          //     req.app.locals.token = {
+          //       value: token,
+          //       expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
+          //     };
+          //   }
           }
-          if (!phone) return res.status(400).send('Input parameter is missing.');
-  
-          console.log('Getting balance data...');
-          const saldoBalancesApiResponse = await axios({
-            method: 'get',
-            url: BALANCES_API_URL,
-            headers: {
-              Authorization: `Bearer ${req.app.locals.token.value}`,
-              'Session-Id': BALANCES_API_SESSION_ID,
-              Channel: BALANCES_API_CHANNEL,
-              Service: BALANCES_API_SERVICE,
-              SubId: `549${phone}`,
-            },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Response');
-              console.log(res.data);
-              return res.data;
+
+          let accountBalance = 0.0;
+
+          if (!balanceValidationFailed) {
+            const {
+              API_URL,
+              API_SESSION_ID,
+              API_COUNTRY,
+            } = process.env;
+
+            let phone: string | null = null;
+            for (const argument of decoded.inArguments) {
+              if (argument.phone) {
+                phone = argument.phone;
+                break;
+              }
+            }
+            if (!phone) return res.status(400).send('Input parameter is missing.');
+
+            console.log('Getting balance data...');
+            const packRenovableApiResponse = await axios({
+              method: 'post',
+              url: API_URL,
+              headers: {
+                Country: API_COUNTRY,
+                'Session-Id': API_SESSION_ID
+              },
+              httpsAgent,
             })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
-            });
-          if (!saldoBalancesApiResponse) balanceValidationFailed = true;
-          else accountBalance = saldoBalancesApiResponse.balancesDetails.accountBalance;
+              .then((res: any) => {
+                console.log('Response');
+                console.log(res.data);
+                return res.data;
+              })
+              .catch((err: any) => {
+                console.log('Error:');
+                console.log(err);
+              });
+            if (!packRenovableApiResponse) balanceValidationFailed = true;
+            else accountBalance = packRenovableApiResponse.balancesDetails.accountBalance;
+          }
+          // const { responseCode, responseMessage, packId, handle } = packRenovableApiResponse.data;
+          // return { responseCode, responseMessage, packId, handle };
+
+          res.status(200).send({
+            accountBalance,
+            balanceValidationFailed,
+          });
+        } else {
+          console.error('inArguments invalid.');
+          return res.status(400).end();
         }
-  
-        res.status(200).send({
-          accountBalance,
-          balanceValidationFailed,
-        });
-      } else {
-        console.error('inArguments invalid.');
-        return res.status(400).end();
-      }
-    },
+      },
   );
 };
 
