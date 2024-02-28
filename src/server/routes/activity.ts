@@ -49,7 +49,9 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-  phone?: string;
+  dataExtension?: string;
+  channel?: string;
+
 }
 interface DecodedBody {
   inArguments?: InputParamenter[];
@@ -81,93 +83,87 @@ const execute = async function (req: Request, res: Response) {
         const { value, expiresAt } = req.app.locals.token;
 
         const now = new Date();
-
-        let balanceValidationFailed = false;
-
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        if (value === null || expiresAt < now) {
-          const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
+        // if (value === null || expiresAt < now) {
+        //   const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
 
-          //   console.log('GETTING TOKEN...');
-          //   const token: string = await axios({
-          //     method: 'post',
-          //     url: TOKEN_API_URL,
-          //     data: {
-          //       username: TOKEN_API_USERNAME,
-          //       password: TOKEN_API_PASSWORD
-          //     },
-          //     httpsAgent,
-          //   })
-          //     .then((res: any) => {
-          //       console.log('Token obtained.');
-          //       if (res.headers.authorization) return res.headers.authorization.substring(7);
-          //     })
-          //     .catch((err: any) => {
-          //       console.log('Error:');
-          //       console.log(err);
-          //     });
-          //   if (!token) balanceValidationFailed = true;
-          //   else {
-          //     req.app.locals.token = {
-          //       value: token,
-          //       expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
-          //     };
-          //   }
-          }
+        //     // console.log('GETTING TOKEN...');
+        //     // const token: string = await axios({
+        //     //   method: 'post',
+        //     //   url: TOKEN_API_URL,
+        //     //   data: {
+        //     //     username: TOKEN_API_USERNAME,
+        //     //     password: TOKEN_API_PASSWORD
+        //     //   },
+        //     //   httpsAgent,
+        //     // })
+        //     //   .then((res: any) => {
+        //     //     console.log('Token obtained.');
+        //     //     if (res.headers.authorization) return res.headers.authorization.substring(7);
+        //     //   })
+        //     //   .catch((err: any) => {
+        //     //     console.log('Error:');
+        //     //     console.log(err);
+        //     //   });
+        //     // if (!token) balanceValidationFailed = true;
+        //     // else {
+        //     //   req.app.locals.token = {
+        //     //     value: token,
+        //     //     expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
+        //     //   };
+        //     // }
+        // }
 
-          let accountBalance = 0.0;
+        const {
+            API_URL,
+            API_SESSION_ID,
+            API_COUNTRY,
+          } = process.env;
 
-          if (!balanceValidationFailed) {
-            const {
-              API_URL,
-              API_SESSION_ID,
-              API_COUNTRY,
-            } = process.env;
-
-            let phone: string | null = null;
-            for (const argument of decoded.inArguments) {
-              if (argument.phone) {
-                phone = argument.phone;
-                break;
-              }
+          let dataExtension: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.dataExtension) {
+              dataExtension = argument.dataExtension;
+              break;
             }
-            if (!phone) return res.status(400).send('Input parameter is missing.');
-
-            console.log('Getting balance data...');
-            const packRenovableApiResponse = await axios({
-              method: 'post',
-              url: API_URL,
-              headers: {
-                Country: API_COUNTRY,
-                'Session-Id': API_SESSION_ID
-              },
-              httpsAgent,
-            })
-              .then((res: any) => {
-                console.log('Response');
-                console.log(res.data);
-                return res.data;
-              })
-              .catch((err: any) => {
-                console.log('Error:');
-                console.log(err);
-              });
-            if (!packRenovableApiResponse) balanceValidationFailed = true;
-            else accountBalance = packRenovableApiResponse.balancesDetails.accountBalance;
           }
-          // const { responseCode, responseMessage, packId, handle } = packRenovableApiResponse.data;
-          // return { responseCode, responseMessage, packId, handle };
+          if (!dataExtension) return res.status(400).send('Input parameter is missing.');
 
-          res.status(200).send({
-            accountBalance,
-            balanceValidationFailed,
-          });
-        } else {
-          console.error('inArguments invalid.');
-          return res.status(400).end();
-        }
-      },
+          console.log('packrenovable...');
+          const packRenovableApiResponse = await axios({
+            method: 'post',
+            url: API_URL,
+            headers: {
+              Country: API_COUNTRY,
+              'Session-Id': API_SESSION_ID
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Response');
+              console.log(res.data);
+              return res.data;
+            })
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
+            });
+        
+        const { responseCode, responseMessage, packId, handle } = packRenovableApiResponse.data;
+        return { responseCode, responseMessage, packId, handle };
+
+        res.status(200).send({
+          responseCode,
+          responseMessage,
+          packId,
+          handle
+        });
+      } else {
+        console.error('inArguments invalid.');
+        return res.status(400).end();
+      }
+    },
   );
 };
 
