@@ -81,11 +81,6 @@
                             "isNullable": true,
                             "direction": "in"
                         },
-                        "cellularNumber": {
-                            "dataType": "Phone",
-                            "isNullable": true,
-                            "direction": "in"
-                        },
                         "channel": {
                             "dataType": "Text",
                             "isNullable": false,
