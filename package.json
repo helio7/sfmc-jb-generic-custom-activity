@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node app.js",
     "clean": "rm -rf dist",
-    "build": "tsc"
+    "build": "tsc && npx webpack"
   },
   "keywords": [
     "journey",

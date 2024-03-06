@@ -7,9 +7,6 @@ module.exports = {
    output: {
      filename: 'customActivity.js',
    },
-   resolve: {
-    extensions: ['.ts', '.js'],
-  },
    plugins: [
     new CopyPlugin({
       patterns: [
@@ -18,13 +15,4 @@ module.exports = {
       ],
     }),
   ],
-  module: {
-    rules: [  
-      {
-        test: /\.ts$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
-      },
-    ]
-},  
 };
