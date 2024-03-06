@@ -9,7 +9,7 @@
     "lang": {
         "en-US": {
             "name": "DINAMICALLY_REPLACED",
-            "description": "Revisa si la línea tiene un pack renovable pendiente de renovar.",
+            "description": "Revisa si la linea tiene pack pendiente.",
             "step1Label": "Configure Activity"
         }
     },
@@ -17,7 +17,6 @@
         "execute": {
             "inArguments": [
                 { "dataExtension": "" },
-                { "cellularNumber": "" },
                 { "channel": "" }
             ],
             "outArguments": [

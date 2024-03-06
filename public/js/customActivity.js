@@ -22,17 +22,16 @@ define(['postmonger'], (Postmonger) => {
 
         const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
         if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
-        
+
         const channelArg = inArguments.find(arg => arg.channel);
         if (channelArg) document.getElementById('channel').value = channelArg.channel;
-   
+      
     });
 
     connection.on('clickedNext', () => {
         const dataExtension = document.getElementById('dataExtension').value;
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
         const channel = document.getElementById('channel').value;
-
 
         payload['arguments'].execute.inArguments = [
             { dataExtension: dataExtension ? dataExtension : null },
