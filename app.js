@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const errorhandler = require('errorhandler');
 const http = require('http');
 const path = require('path');
-const routes = require('./routes');
-const activity = require('./routes/activity');
+const routes = require('./src/routes');
+const activity = require('./src/routes/activity');
 
 const app = express();
 

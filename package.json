@@ -7,9 +7,9 @@
   },
   "typeapp": "Express",
   "scripts": {
+    "start": "node app.js",
     "clean": "rm -rf dist",
-    "build": "tsc && npx webpack",
-    "start": "node dist/app.js"
+    "build": "tsc && npx webpack"
   },
   "keywords": [
     "journey",
@@ -40,8 +40,6 @@
     "uglify-js": "^3.7.2"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "webpack": "^5.90.3",
     "webpack-cli": "^5.1.4"
   }
 }

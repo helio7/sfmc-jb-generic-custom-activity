@@ -6,7 +6,7 @@ const configJsonFile = require("../public/config.json");
  * GET home page.
  */
 exports.index = (req, res) => {
-	if (!req.session.token) {
+	if (!req.session.token) {		
 		res.render("index", {
 			title: "Unauthenticated",
 			errorMessage: "This app may only be loaded via Salesforce Marketing Cloud."
