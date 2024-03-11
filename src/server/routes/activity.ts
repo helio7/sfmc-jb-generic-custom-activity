@@ -121,8 +121,9 @@ const execute = async function (req: Request, res: Response) {
         if (!balanceValidationFailed) {
           const {
             API_URL,
-            API_COUNTRY,
             API_SESSION_ID,
+            API_COUNTRY,
+            BALANCES_API_SERVICE,
           } = process.env;
   
           let phone: string | null = null;
@@ -134,41 +135,28 @@ const execute = async function (req: Request, res: Response) {
           }
           if (!phone) return res.status(400).send('Input parameter is missing.');
   
-          try {
-            console.log('Getting pack renovable...');
-            const packRenovableApiResponse = await axios({
-              method: 'post',
-              url: API_URL,
-              headers: {
-                Country: API_COUNTRY,
-                'Session-Id': API_SESSION_ID,
-              },
-              data: {
-                phone: `549${phone}`,
-              },
-              httpsAgent,
+          console.log('Getting balance data...');
+          const saldoBalancesApiResponse = await axios({
+            method: 'post',
+            url: API_URL,
+            headers: {
+              Authorization: `Bearer ${req.app.locals.token.value}`,
+              Country: API_COUNTRY,
+            'Session-Id': API_SESSION_ID
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Response');
+              console.log(res.data);
+              return res.data;
+            })
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
             });
-
-            let responseCode, responseMessage, packId, handle;
-            if (packRenovableApiResponse.data.code) {
-              responseCode = packRenovableApiResponse.data.code;
-              responseMessage = packRenovableApiResponse.data.description;
-            } else {
-              responseCode = packRenovableApiResponse.data.responseCode;
-              responseMessage = packRenovableApiResponse.data.responseMessage;
-              packId = packRenovableApiResponse.data.pack.packId;
-              handle = packRenovableApiResponse.data.handle;
-            }
-
-            accountBalance = packRenovableApiResponse.data.balancesDetails.accountBalance;
-          } catch (error) {
-            console.error('Error en la solicitud:', error);
-            if (error.response) {
-              const { data, status } = error.response;
-              console.log('API_REQUEST_ERROR', { data, status });
-            }
-            balanceValidationFailed = true;
-          }
+          if (!saldoBalancesApiResponse) balanceValidationFailed = true;
+          else accountBalance = saldoBalancesApiResponse.balancesDetails.accountBalance;
         }
   
         res.status(200).send({
@@ -183,4 +171,37 @@ const execute = async function (req: Request, res: Response) {
   );
 };
 
-const edit = (req: any, res: any)
+const edit = (req: any, res: any) => {
+  saveData(req);
+  res.send(200, 'Edit');
+};
+
+const save = (req: any, res: any) => {
+  saveData(req);
+  res.send(200, 'Save');
+};
+
+const publish = (req: any, res: any) => {
+  saveData(req);
+  res.send(200, 'Publish');
+};
+
+const validate = (req: any, res: any) => {
+  saveData(req);
+  res.send(200, 'Validate');
+};
+
+const stop = (req: any, res: any) => {
+  saveData(req);
+  res.send(200, 'Stop');
+};
+
+export default {
+  logExecuteData,
+  execute,
+  edit,
+  save,
+  publish,
+  validate,
+  stop,
+};
