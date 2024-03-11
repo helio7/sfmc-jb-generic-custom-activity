@@ -50,7 +50,6 @@ exports.execute = (req, res) => {
 
             const now = new Date();
 
-            let accountBalance = '0.00';
             let balanceValidationFailed = false;
 
             const httpsAgent = new https.Agent({ rejectUnauthorized: false });
@@ -136,14 +135,11 @@ exports.execute = (req, res) => {
                         return { responseCode: '', responseMessage: '', packId: '', handle: '' };
                     });
 
-                accountBalance = parseFloat(packRenovableApiResponse.packId).toFixed(2);
             }
-
-            const result = `{"balanceValida tionFailed":${balanceValidationFailed ? 'true' : 'false'},"saldo":${accountBalance}}`;
 
             res.setHeader('Content-Type', 'application/json');
             res.status(200);
-            res.end(result);
+            // res.end(result);
         } else {
             console.error('inArguments invalid.');
             return res.status(400).end();
