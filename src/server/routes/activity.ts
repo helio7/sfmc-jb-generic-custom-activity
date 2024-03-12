@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { Response } from 'express';
 import { verify } from 'jsonwebtoken';
 
-interface LogData {
+const logExecuteData: {
   body: any;
   headers: any;
   trailers: any;
@@ -23,13 +23,11 @@ interface LogData {
   protocol: any;
   secure: any;
   originalUrl: any;
-}
+}[] = [];
 
-const logExecuteData: LogData[] = [];
-
-const saveData = (req: Request) => {
+const saveData = (req: any) => {
   // Put data from the request in an array accessible to the main app.
-  logExecuteData.push({
+  exports.logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -41,14 +39,14 @@ const saveData = (req: Request) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.hostname,
+    host: req.host,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
     secure: req.secure,
     originalUrl: req.originalUrl
   });
-};
+}
 
 interface InputParamenter {
   phone?: string;
@@ -59,7 +57,7 @@ interface DecodedBody {
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
-  const { env: { JWT_SECRET, TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD, API_URL, API_SESSION_ID, API_COUNTRY } } = process;
+  const { env: { JWT_SECRET } } = process;
 
   if (!body) {
     console.error(new Error('invalid jwtdata'));
@@ -80,7 +78,7 @@ const execute = async function (req: Request, res: Response) {
         return res.status(401).end();
       }
       if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-        const { value, expiresAt } = req.app.locals.token || {};
+        const { value, expiresAt } = req.app.locals.token;
 
         const now = new Date();
 
@@ -88,43 +86,45 @@ const execute = async function (req: Request, res: Response) {
 
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        if (!value || expiresAt < now) {
-          try {
-            console.log('GETTING TOKEN...');
-            const token: string = await axios({
-              method: 'post',
-              url: TOKEN_API_URL,
-              data: {
-                username: TOKEN_API_USERNAME,
-                password: TOKEN_API_PASSWORD
-              },
-              httpsAgent,
+        if (value === null || expiresAt < now) {
+          const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
+  
+          console.log('GETTING TOKEN...');
+          const token: string = await axios({
+            method: 'post',
+            url: TOKEN_API_URL,
+            data: {
+              username: TOKEN_API_USERNAME,
+              password: TOKEN_API_PASSWORD
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Token obtained.');
+              if (res.headers.authorization) return res.headers.authorization.substring(7);
             })
-              .then((response: any) => {
-                console.log('Token obtained.');
-                if (response.headers.authorization) return response.headers.authorization.substring(7);
-                return null;
-              })
-              .catch((error: any) => {
-                console.log('Error getting token:', error);
-                return null;
-              });
-            if (!token) balanceValidationFailed = true;
-            else {
-              req.app.locals.token = {
-                value: token,
-                expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
-              };
-            }
-          } catch (tokenError) {
-            console.error('Error getting token:', tokenError);
-            balanceValidationFailed = true;
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
+            });
+          if (!token) balanceValidationFailed = true;
+          else {
+            req.app.locals.token = {
+              value: token,
+              expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
+            };
           }
         }
 
         let accountBalance = 0.0;
   
         if (!balanceValidationFailed) {
+          const {
+            API_URL,
+            API_SESSION_ID,
+            API_COUNTRY
+          } = process.env;
+  
           let phone: string | null = null;
           for (const argument of decoded.inArguments) {
             if (argument.phone) {
@@ -134,24 +134,28 @@ const execute = async function (req: Request, res: Response) {
           }
           if (!phone) return res.status(400).send('Input parameter is missing.');
   
-          try {
-            console.log('Getting balance data...');
-            const saldoBalancesApiResponse = await axios({
-              method: 'post',
-              url: API_URL,
-              headers: {
-                Authorization: `Bearer ${req.app.locals.token.value}`,
-                Country: API_COUNTRY,
-                'Session-Id': API_SESSION_ID
-              },
-              httpsAgent,
+          console.log('Getting balance data...');
+          const saldoBalancesApiResponse = await axios({
+            method: 'post',
+            url: API_URL,
+            headers: {
+              Authorization: `Bearer ${req.app.locals.token.value}`,
+              Country: API_COUNTRY,
+            'Session-Id': API_SESSION_ID
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Response');
+              console.log(res.data);
+              return res.data;
+            })
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
             });
-            if (!saldoBalancesApiResponse || !saldoBalancesApiResponse.data.balancesDetails) balanceValidationFailed = true;
-            else accountBalance = saldoBalancesApiResponse.data.balancesDetails.accountBalance;
-          } catch (balanceError) {
-            console.error('Error getting balance:', balanceError);
-            balanceValidationFailed = true;
-          }
+          if (!saldoBalancesApiResponse) balanceValidationFailed = true;
+          else accountBalance = saldoBalancesApiResponse.balancesDetails.accountBalance;
         }
   
         res.status(200).send({
@@ -166,27 +170,27 @@ const execute = async function (req: Request, res: Response) {
   );
 };
 
-const edit = (req: Request, res: Response) => {
+const edit = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Edit');
 };
 
-const save = (req: Request, res: Response) => {
+const save = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Save');
 };
 
-const publish = (req: Request, res: Response) => {
+const publish = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Publish');
 };
 
-const validate = (req: Request, res: Response) => {
+const validate = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Validate');
 };
 
-const stop = (req: Request, res: Response) => {
+const stop = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Stop');
 };
