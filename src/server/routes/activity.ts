@@ -49,11 +49,35 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-  phone?: string;
+  cellularNumber?: string;
+  channel?: string;
 }
 interface DecodedBody {
   inArguments?: InputParamenter[];
 }
+interface DurationTimestampsPair {
+  start: number | null;
+  end: number | null;
+}
+interface RequestBody {
+  cellularNumber: number;
+  channel: string;
+}
+
+interface ResponseBody {
+  responseCode: number;
+  responseMessage: string;
+  handle: number;
+//   {
+//     code: number,
+//     description: string
+// }
+  pack: {
+    packId: string,
+    description: string
+}[];
+}
+
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
@@ -79,93 +103,135 @@ const execute = async function (req: Request, res: Response) {
       }
       if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
         const { value, expiresAt } = req.app.locals.token;
+        let cellularNumber: string | null = null;
+        let channel: string | null = null;
+        for (const argument of decoded.inArguments) {
+          if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+          else if (argument.channel) channel = argument.channel;
+          if (channel && cellularNumber) break;
+        }
+        if (!channel || !cellularNumber ) return res.status(400).send('Input parameter is missing.');
 
         const now = new Date();
 
         let balanceValidationFailed = false;
+        const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+
 
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        if (value === null || expiresAt < now) {
-          const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
+        // if (value === null || expiresAt < now) {
+        //   const { TOKEN_API_URL, TOKEN_API_USERNAME, TOKEN_API_PASSWORD } = process.env;
   
-          console.log('GETTING TOKEN...');
-          const token: string = await axios({
-            method: 'post',
-            url: TOKEN_API_URL,
-            data: {
-              username: TOKEN_API_USERNAME,
-              password: TOKEN_API_PASSWORD
-            },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Token obtained.');
-              if (res.headers.authorization) return res.headers.authorization.substring(7);
-            })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
-            });
-          if (!token) balanceValidationFailed = true;
-          else {
-            req.app.locals.token = {
-              value: token,
-              expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
-            };
-          }
-        }
+        //   console.log('GETTING TOKEN...');
+        //   const token: string = await axios({
+        //     method: 'post',
+        //     url: TOKEN_API_URL,
+        //     data: {
+        //       username: TOKEN_API_USERNAME,
+        //       password: TOKEN_API_PASSWORD
+        //     },
+        //     httpsAgent,
+        //   })
+        //     .then((res: any) => {
+        //       console.log('Token obtained.');
+        //       if (res.headers.authorization) return res.headers.authorization.substring(7);
+        //     })
+        //     .catch((err: any) => {
+        //       console.log('Error:');
+        //       console.log(err);
+        //     });
+        //   if (!token) balanceValidationFailed = true;
+        //   else {
+        //     req.app.locals.token = {
+        //       value: token,
+        //       expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 23),
+        //     };
+        //   }
+        // }
 
-        let accountBalance = 0.0;
+        // let accountBalance = 0.0;
   
-        if (!balanceValidationFailed) {
+        // if (!balanceValidationFailed) {
           const {
             API_URL,
             API_SESSION_ID,
             API_COUNTRY
           } = process.env;
   
-          let phone: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.phone) {
-              phone = argument.phone;
-              break;
-            }
-          }
-          if (!phone) return res.status(400).send('Input parameter is missing.');
+        //   let phone: string | null = null;
+        //   for (const argument of decoded.inArguments) {
+        //     if (argument.phone) {
+        //       phone = argument.phone;
+        //       break;
+        //     }
+        //   }
+        //   if (!phone)  return res.status(400).send('Input parameter is missing.');
   
-          console.log('Getting balance data...');
-          const saldoBalancesApiResponse = await axios({
+          // console.log('Getting balance data...');
+          
+          const offersApiResponse: { data: ResponseBody } | null = await axios({
             method: 'post',
             url: API_URL,
+            data: {
+                cellularNumber: Number(cellularNumber),
+                channel: channel
+            } as RequestBody,
             headers: {
-              Authorization: `Bearer ${req.app.locals.token.value}`,
-              Country: API_COUNTRY,
-            'Session-Id': API_SESSION_ID
+                Country: API_COUNTRY,
+                'Session-Id': API_SESSION_ID
             },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Response');
-              console.log(res.data);
-              return res.data;
-            })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        })
+            .catch((err) => {
+                offersRequestDurationTimestamps.end = performance.now();
+                if (err.response) {
+                    const { data, status } = err.response;
+                    // specialConsoleLog({
+                    //     phoneNumber: cellularNumber!,
+                    //     eventName: 'OFFERS_REQUEST_FAILED',
+                    //     durationTimestamps: offersRequestDurationTimestamps,
+                    //     data: { data, status },
+                    // });
+                }
+                console.log('Error when calling the offers API:');
+                console.log(err);
+                return null;
             });
-          if (!saldoBalancesApiResponse) balanceValidationFailed = true;
-          else accountBalance = saldoBalancesApiResponse.balancesDetails.accountBalance;
+        offersRequestDurationTimestamps.end = performance.now();
+
+          // const saldoBalancesApiResponse = await axios({
+          //   method: 'post',
+          //   url: API_URL,
+          //   headers: {
+          //     Authorization: `Bearer ${req.app.locals.token.value}`,
+          //     Country: API_COUNTRY,
+          //   'Session-Id': API_SESSION_ID
+          //   },
+          //   httpsAgent,
+          // })
+          //   .then((res: any) => {
+          //     console.log('Response');
+          //     console.log(res.data);
+          //     return res.data;
+          //   })
+          //   .catch((err: any) => {
+          //     console.log('Error:');
+          //     console.log(err);
+          //   });
+          // if (!saldoBalancesApiResponse) balanceValidationFailed = true;
+          // else accountBalance = saldoBalancesApiResponse.balancesDetails.accountBalance;
         }
+        
   
-        res.status(200).send({
-          accountBalance,
-          balanceValidationFailed,
-        });
-      } else {
-        console.error('inArguments invalid.');
-        return res.status(400).end();
-      }
+      //   res.status(200).send({
+      //     accountBalance,
+      //     balanceValidationFailed,
+      //   });
+      // } else {
+      //   console.error('inArguments invalid.');
+      //   return res.status(400).end();
+      // }
     },
   );
 };
