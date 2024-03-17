@@ -37,7 +37,7 @@ const saveData = (req: any) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.host,
+    host: req.hostname,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -162,27 +162,27 @@ const execute = async function (req: Request, res: Response) {
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Edit');
+  res.status(200).send('Edit'); // Cambiar res.send(200, 'Edit') por res.status(200).send('Edit')
 };
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Save');
+  res.status(200).send('Save'); 
 };
 
 const publish = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Publish');
+  res.status(200).send('Publish');
 };
 
 const validate = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Validate');
+  res.status(200).send('Validate');
 };
 
 const stop = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Stop');
+  res.status(200).send('Stop');
 };
 
 export default {
