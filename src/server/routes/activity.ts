@@ -119,6 +119,7 @@ const execute = async function (req: Request, res: Response) {
           API_COUNTRY
         } = process.env;
 
+        console.log('Calling offers API...');
         const offersApiResponse: { data: ResponseBody } | null = await axios({
           method: 'post',
           url: API_URL!,
@@ -136,6 +137,7 @@ const execute = async function (req: Request, res: Response) {
               offersRequestDurationTimestamps.end = performance.now();
               if (err.response) {
                   const { data, status } = err.response;
+                  console.error('Error response from offers API:', status, data);
               }
               console.log('Error when calling the offers API:');
               console.log(err);
@@ -146,9 +148,11 @@ const execute = async function (req: Request, res: Response) {
 
         // Enviar la respuesta de la API como respuesta al cliente
         if (offersApiResponse) {
+          console.log('Offers API response:', offersApiResponse.data);
           return res.status(200).json(offersApiResponse.data);
         } else {
           // Manejar el caso donde no hay respuesta de la API
+          console.error('No response from offers API');
           return res.status(500).send('Error obteniendo respuesta de la API');
         }
       }
