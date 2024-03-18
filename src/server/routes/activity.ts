@@ -109,8 +109,6 @@ const execute = async function (req: Request, res: Response) {
         if (!channel || !cellularNumber) return res.status(400).send('Input parameter is missing.');
 
         const now = new Date();
-
-        let balanceValidationFailed = false;
         const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
 
         const {
@@ -119,8 +117,8 @@ const execute = async function (req: Request, res: Response) {
           API_COUNTRY
         } = process.env;
 
-        console.log('Calling offers API...');
-        const offersApiResponse: { data: ResponseBody } | null = await axios({
+        console.log('Llamado a la API...');
+        const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
           method: 'post',
           url: API_URL!,
           data: {
@@ -137,9 +135,9 @@ const execute = async function (req: Request, res: Response) {
               offersRequestDurationTimestamps.end = performance.now();
               if (err.response) {
                   const { data, status } = err.response;
-                  console.error('Error response from offers API:', status, data);
+                  console.error('Error de respuesta de la API:', status, data);
               }
-              console.log('Error when calling the offers API:');
+              console.log('Error llamando a la API:');
               console.log(err);
               return null;
           });
@@ -147,12 +145,12 @@ const execute = async function (req: Request, res: Response) {
         offersRequestDurationTimestamps.end = performance.now();
 
         // Enviar la respuesta de la API como respuesta al cliente
-        if (offersApiResponse) {
-          console.log('Offers API response:', offersApiResponse.data);
-          return res.status(200).json(offersApiResponse.data);
+        if (packRenovableApiResponse) {
+          console.log('Respuesta de API:', packRenovableApiResponse.data);
+          return res.status(200).json(packRenovableApiResponse.data);
         } else {
           // Manejar el caso donde no hay respuesta de la API
-          console.error('No response from offers API');
+          console.error('Sin respuesta de la API');
           return res.status(500).send('Error obteniendo respuesta de la API');
         }
       }
@@ -162,7 +160,7 @@ const execute = async function (req: Request, res: Response) {
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Edit'); // Cambiar res.send(200, 'Edit') por res.status(200).send('Edit')
+  res.status(200).send('Edit');
 };
 
 const save = (req: any, res: any) => {
