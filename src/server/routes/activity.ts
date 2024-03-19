@@ -77,21 +77,19 @@ interface ResponseBody {
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
-  const { env: { JWT_SECRET } } = process;
+  // const { env: { JWT_SECRET } } = process;
 
-  if (!body) {
-    console.error(new Error('Invalid jwtdata'));
-    return res.status(401).end();
-  }
-  if (!JWT_SECRET) {
-    console.error(new Error('jwtSecret not provided'));
-    return res.status(401).end();
-  }
+  // if (!body) {
+  //   console.error(new Error('Invalid jwtdata'));
+  //   return res.status(401).end();
+  // }
+  // if (!JWT_SECRET) {
+  //   console.error(new Error('jwtSecret not provided'));
+  //   return res.status(401).end();
+  // }
 
   verify(
     body.toString('utf8'),
-    JWT_SECRET,
-    { algorithms: ['HS256'], complete: false },
     async (err: any, decoded?: any) => {
       if (err) {
         console.error(err);
