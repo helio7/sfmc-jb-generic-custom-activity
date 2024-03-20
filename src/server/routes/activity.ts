@@ -60,26 +60,24 @@ interface ResponseBody {
   }[];
 }
 
-
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
 
-  if (!body) {
-    console.error(new Error('Invalid request body'));
-    return res.status(400).send('Invalid request body');
+  if (!body || !body.decoded || !body.decoded.inArguments || body.decoded.inArguments.length === 0) {
+    console.error(new Error('Invalid or missing decoded body'));
+    return res.status(400).send('Invalid or missing decoded body');
   }
-  
 
-  // const { cellularNumber, channel } = body;
   const { decoded } = body;
+  const { inArguments } = decoded;
 
   let cellularNumber: number | null = null;
   let channel: string | null = null;
-  for (const argument of decoded.inArguments) {
-      if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-      if (argument.channel) channel = argument.channel;
-  }
 
+  for (const argument of inArguments) {
+    if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+    if (argument.channel) channel = argument.channel;
+  }
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
     return res.status(400).send('Missing input parameters');
