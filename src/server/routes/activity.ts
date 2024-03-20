@@ -1,7 +1,6 @@
 import https from 'https';
 import axios from 'axios';
 import { Request, Response } from 'express';
-import { verify } from 'jsonwebtoken';
 
 const logExecuteData: {
   body: any;
@@ -46,20 +45,6 @@ const saveData = (req: any) => {
   });
 }
 
-interface InputParamenter {
-  cellularNumber?: string;
-  channel?: string;
-}
-
-interface DecodedBody {
-  inArguments?: InputParamenter[];
-}
-
-interface DurationTimestampsPair {
-  start: number | null;
-  end: number | null;
-}
-
 interface RequestBody {
   cellularNumber: number;
   channel: string;
@@ -77,83 +62,64 @@ interface ResponseBody {
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
-  // const { env: { JWT_SECRET } } = process;
 
-  // if (!body) {
-  //   console.error(new Error('Invalid jwtdata'));
-  //   return res.status(401).end();
-  // }
-  // if (!JWT_SECRET) {
-  //   console.error(new Error('jwtSecret not provided'));
-  //   return res.status(401).end();
-  // }
+  if (!body) {
+    console.error(new Error('Invalid request body'));
+    return res.status(400).send('Invalid request body');
+  }
 
-  verify(
-    body.toString('utf8'),
-    async (err: any, decoded?: any) => {
-      if (err) {
-        console.error(err);
-        return res.status(401).end();
-      }
-      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-        const { value, expiresAt } = req.app.locals.token;
-        let cellularNumber: string | null = null;
-        let channel: string | null = null;
-        for (const argument of decoded.inArguments) {
-          if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-          else if (argument.channel) channel = argument.channel;
-          if (channel && cellularNumber) break;
-        }
-        if (!channel || !cellularNumber) return res.status(400).send('Input parameter is missing.');
+  const { cellularNumber, channel } = body;
 
-        const now = new Date();
-        const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+  if (!cellularNumber || !channel) {
+    console.error(new Error('Missing input parameters'));
+    return res.status(400).send('Missing input parameters');
+  }
 
-        const {
-          API_URL,
-          API_SESSION_ID,
-          API_COUNTRY
-        } = process.env;
+  const now = new Date();
+  const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
 
-        console.log('Llamado a la API...');
-        const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-          method: 'post',
-          url: API_URL!,
-          data: {
-              cellularNumber: Number(cellularNumber),
-              channel: channel
-          } as RequestBody,
-          headers: {
-              Country: API_COUNTRY!,
-              'Session-Id': API_SESSION_ID!
-          },
-          httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-        })
-          .catch((err) => {
-              offersRequestDurationTimestamps.end = performance.now();
-              if (err.response) {
-                  const { data, status } = err.response;
-                  console.error('Error de respuesta de la API:', status, data);
-              }
-              console.log('Error llamando a la API:');
-              console.log(err);
-              return null;
-          });
+  const {
+    API_URL,
+    API_SESSION_ID,
+    API_COUNTRY
+  } = process.env;
 
-        offersRequestDurationTimestamps.end = performance.now();
-
-        // Enviar la respuesta de la API como respuesta al cliente
-        if (packRenovableApiResponse) {
-          console.log('Respuesta de API:', packRenovableApiResponse.data);
-          return res.status(200).json(packRenovableApiResponse.data);
-        } else {
-          // Manejar el caso donde no hay respuesta de la API
-          console.error('Sin respuesta de la API');
-          return res.status(500).send('Error obteniendo respuesta de la API');
-        }
-      }
+  console.log('Llamando a la API...');
+  const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
+    method: 'post',
+    url: API_URL!,
+    data: {
+      cellularNumber: Number(cellularNumber),
+      channel: channel
+    } as RequestBody,
+    headers: {
+      Country: API_COUNTRY!,
+      'Session-Id': API_SESSION_ID!
     },
-  );
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+  })
+    .catch((err) => {
+      offersRequestDurationTimestamps.end = performance.now();
+      if (err.response) {
+        const { data, status } = err.response;
+        console.error('Error de respuesta de la API:', status, data);
+      }
+      console.log('Error llamando a la API:');
+      console.log(err);
+      return null;
+    });
+
+  offersRequestDurationTimestamps.end = performance.now();
+
+  // Enviar la respuesta de la API como respuesta al cliente
+  if (packRenovableApiResponse) {
+    console.log('Respuesta de API:', packRenovableApiResponse.data);
+    return res.status(200).json(packRenovableApiResponse.data);
+  } else {
+    // Manejar el caso donde no hay respuesta de la API
+    console.error('Sin respuesta de la API');
+    return res.status(500).send('Error obteniendo respuesta de la API');
+  }
 };
 
 const edit = (req: any, res: any) => {
