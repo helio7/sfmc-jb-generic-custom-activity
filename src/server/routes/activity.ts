@@ -68,7 +68,15 @@ const execute = async function (req: Request, res: Response) {
     return res.status(400).send('Invalid request body');
   }
 
-  const { cellularNumber, channel } = body;
+  // const { cellularNumber, channel } = body;
+  const { decoded } = body;
+
+  let cellularNumber: number | null = null;
+  let channel: string | null = null;
+  for (const argument of decoded.inArguments) {
+      if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+      if (argument.channel) channel = argument.channel;
+  }
 
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
