@@ -1,3 +1,4 @@
+"use strict";
 import https from 'https';
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -63,21 +64,13 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
 
-  if (!body || !body.decoded || !body.decoded.inArguments || body.decoded.inArguments.length === 0) {
-    console.error(new Error('Invalid or missing decoded body'));
-    return res.status(400).send('Invalid or missing decoded body');
+  if (!body) {
+    console.error(new Error('Invalid request body'));
+    return res.status(400).send('Invalid request body');
   }
 
-  const { decoded } = body;
-  const { inArguments } = decoded;
+  const { cellularNumber, channel } = body;
 
-  let cellularNumber: number | null = null;
-  let channel: string | null = null;
-
-  for (const argument of inArguments) {
-    if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-    if (argument.channel) channel = argument.channel;
-  }
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
     return res.status(400).send('Missing input parameters');

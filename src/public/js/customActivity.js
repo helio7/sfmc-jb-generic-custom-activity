@@ -10,6 +10,7 @@ define(['postmonger'], (Postmonger) => {
         connection.trigger('requestTokens');
         connection.trigger('requestEndpoints');
     });
+
     connection.on('initActivity', (data) => {
         if (data) payload = data;
 
@@ -37,7 +38,6 @@ define(['postmonger'], (Postmonger) => {
             { dataExtension: dataExtension ? dataExtension : null },
             { cellularNumber: cellularNumber ? cellularNumber : null },
             { channel: channel ? channel : null },
-
         ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
