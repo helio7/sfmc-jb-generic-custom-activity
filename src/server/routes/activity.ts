@@ -66,12 +66,6 @@ const execute = async function (req: Request, res: Response) {
 
   console.log('Request Body:', body);
   
-  // Verificar si el cuerpo de la solicitud está en el formato correcto
-  if (!body || !body.dataExtension || !body.channel) {
-    console.error(new Error('Invalid or missing input parameters'));
-    return res.status(400).send('Invalid or missing input parameters');
-  }
-
   // Obtener dataExtension y channel del cuerpo de la solicitud
   const { dataExtension, channel } = body;
 
@@ -82,6 +76,12 @@ const execute = async function (req: Request, res: Response) {
   console.log('Data Extension:', dataExtension);
   console.log('Channel:', channel);
   console.log('Cellular Number:', cellularNumber);
+
+   // Verificar si el cuerpo de la solicitud está en el formato correcto
+   if (!body || !body.dataExtension || !body.channel) {
+    console.error(new Error('Invalid or missing input parameters'));
+    return res.status(400).send('Invalid or missing input parameters');
+  }
 
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
