@@ -67,12 +67,13 @@ const execute = async function (req: Request, res: Response) {
   console.log('Request Body:', body);
   
   // Obtener dataExtension y channel del cuerpo de la solicitud
-  const { dataExtension } = body;
+  // const {  } = body;
 
   // Obtener cellularNumber de la dataExtension (como lo haces en el frontend)
   // Esto es un ejemplo, asegúrate de ajustarlo según tu estructura de datos
   // const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
 
+  const dataExtension = "TestCA"
   const cellularNumber = 1121806490
   const channel = "PDC"
 
