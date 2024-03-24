@@ -66,19 +66,22 @@ const execute = async function (req: Request, res: Response) {
 
   console.log('Request Body:', body);
   
-  const cellularNumber = body.cellularNumber;
-  const channel = body.channel;
-
-  console.log('CellularNumber:', cellularNumber);
-  console.log('Channel:', channel);
-
-
-
-  if (!body) {
-    console.error(new Error('Invalid request body'));
-    return res.status(400).send('Invalid request body');
+  // Verificar si el cuerpo de la solicitud está en el formato correcto
+  if (!body || !body.dataExtension || !body.channel) {
+    console.error(new Error('Invalid or missing input parameters'));
+    return res.status(400).send('Invalid or missing input parameters');
   }
 
+  // Obtener dataExtension y channel del cuerpo de la solicitud
+  const { dataExtension, channel } = body;
+
+  // Obtener cellularNumber de la dataExtension (como lo haces en el frontend)
+  // Esto es un ejemplo, asegúrate de ajustarlo según tu estructura de datos
+  const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
+
+  console.log('Data Extension:', dataExtension);
+  console.log('Channel:', channel);
+  console.log('Cellular Number:', cellularNumber);
 
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
