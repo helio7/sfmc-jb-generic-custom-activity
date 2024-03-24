@@ -22,15 +22,15 @@ define(['postmonger'], (Postmonger) => {
         ) ? data.arguments.execute.inArguments : [];
 
         const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
-        if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
+        if (dataExtensionArg) $('#dataExtension').val(dataExtensionArg.dataExtension);
 
         const channelArg = inArguments.find(arg => arg.channel);
-        if (channelArg) document.getElementById('channel').value = channelArg.channel;
+        if (channelArg) $('#channel').val(channelArg.channel);
     });
 
     connection.on('clickedNext', () => {
-        const dataExtension = document.getElementById('dataExtension').value;
-        const channel = document.getElementById('channel').value;
+        const dataExtension = $('#dataExtension').val();
+        const channel = $('#channel').val();
 
         // Validar si los campos están vacíos o no
         if (!dataExtension || !channel) {
