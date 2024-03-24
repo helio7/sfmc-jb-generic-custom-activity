@@ -26,29 +26,27 @@ define(['postmonger'], (Postmonger) => {
 
         const channelArg = inArguments.find(arg => arg.channel);
         if (channelArg) document.getElementById('channel').value = channelArg.channel;
-      
     });
 
     connection.on('clickedNext', () => {
         const dataExtension = document.getElementById('dataExtension').value;
-        const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
         const channel = document.getElementById('channel').value;
 
-        console.log('1DataExtension:', dataExtension);
-        console.log('1CellularNumber:', cellularNumber);
-        console.log('1Channel:', channel);
+        // Validar si los campos están vacíos o no
+        if (!dataExtension || !channel) {
+            console.error(new Error('Data Extension and Channel are required'));
+            return;
+        }
 
-        payload['arguments'].execute.inArguments = [
-            { dataExtension: dataExtension ? dataExtension : null },
-            { cellularNumber: cellularNumber ? cellularNumber : null },
-            { channel: channel ? channel : null },
-        ];
+        // Construir el cuerpo de la solicitud
+        const dataToSend = {
+            cellularNumber: null, // Este valor se obtendrá de la dataExtension en el backend
+            channel: channel
+        };
+
+        payload['arguments'].execute.inArguments = [dataToSend];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
-
-        console.log('12DataExtension:', dataExtension);
-        console.log('12CellularNumber:', cellularNumber);
-        console.log('12Channel:', channel);
     });
 
     connection.trigger('requestTriggerEventDefinition');
