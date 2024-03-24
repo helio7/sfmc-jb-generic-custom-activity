@@ -34,6 +34,10 @@ define(['postmonger'], (Postmonger) => {
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
         const channel = document.getElementById('channel').value;
 
+        console.log('1DataExtension:', dataExtension);
+        console.log('1CellularNumber:', cellularNumber);
+        console.log('1Channel:', channel);
+
         payload['arguments'].execute.inArguments = [
             { dataExtension: dataExtension ? dataExtension : null },
             { cellularNumber: cellularNumber ? cellularNumber : null },
@@ -41,6 +45,10 @@ define(['postmonger'], (Postmonger) => {
         ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
+
+        console.log('12DataExtension:', dataExtension);
+        console.log('12CellularNumber:', cellularNumber);
+        console.log('12Channel:', channel);
     });
 
     connection.trigger('requestTriggerEventDefinition');

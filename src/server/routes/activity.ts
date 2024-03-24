@@ -64,12 +64,21 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
 
+  console.log('Request Body:', body);
+  
+  const cellularNumber = body.cellularNumber;
+  const channel = body.channel;
+
+  console.log('CellularNumber:', cellularNumber);
+  console.log('Channel:', channel);
+
+
+
   if (!body) {
     console.error(new Error('Invalid request body'));
     return res.status(400).send('Invalid request body');
   }
 
-  const { cellularNumber, channel } = body;
 
   if (!cellularNumber || !channel) {
     console.error(new Error('Missing input parameters'));
