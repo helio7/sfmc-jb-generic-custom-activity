@@ -29,8 +29,9 @@ define(['postmonger'], (Postmonger) => {
     });
 
     connection.on('clickedNext', () => {
-        const dataExtension = $('#dataExtension').val();
-        const channel = $('#channel').val();
+        const dataExtension = "TestCA"; // Hardcodea aquí el nombre de tu Data Extension
+        const channel = "PDC"; // Hardcodea aquí el canal de prueba
+        const cellularNumber = "1121806490";
 
         // Validar si los campos están vacíos o no
         if (!dataExtension || !channel) {
@@ -40,8 +41,9 @@ define(['postmonger'], (Postmonger) => {
 
         // Construir el cuerpo de la solicitud
         const dataToSend = {
-            cellularNumber: null, // Este valor se obtendrá de la dataExtension en el backend
-            channel: channel
+            dataExtension: dataExtension, // Envía el nombre de la Data Extension
+            channel: channel, // Envía el canal
+            cellularNumber: cellularNumber // Envía el número de celular
         };
 
         payload['arguments'].execute.inArguments = [dataToSend];
