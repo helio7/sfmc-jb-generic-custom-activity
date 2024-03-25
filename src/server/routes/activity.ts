@@ -66,15 +66,17 @@ const execute = async function (req: Request, res: Response) {
     const { body } = req;
     console.log('Request Body:', body);
 
-    const cellularNumber = 1121806490;
-    const channel = "PDC";
-    const dataExtension = "TestCA";
+    // const cellularNumber = 1121806490;
+    // const channel = "PDC";
+    // const dataExtension = "TestCA";
+
+    const { cellularNumber, channel, dataExtension } = body;
+
 
     console.log('Cellular Number:', cellularNumber);
     console.log('Data Extension:', dataExtension);
     console.log('Channel:', channel);
 
-    // Verificar si los parámetros son undefined o null
     if (!dataExtension || !channel || !cellularNumber) {
       console.error(new Error('Missing input parameters'));
       return res.status(400).send('Missing input parameters');
@@ -106,12 +108,11 @@ const execute = async function (req: Request, res: Response) {
 
     offersRequestDurationTimestamps.end = Date.now();
 
-    // Enviar la respuesta de la API como respuesta al cliente
     if (packRenovableApiResponse) {
       console.log('Respuesta de API:', packRenovableApiResponse.data);
       return res.status(200).json(packRenovableApiResponse.data);
     } else {
-      // Manejar el caso donde no hay respuesta de la API
+
       console.error('Sin respuesta de la API');
       return res.status(500).send('Error obteniendo respuesta de la API');
     }

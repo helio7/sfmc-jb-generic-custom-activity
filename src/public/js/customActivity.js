@@ -34,16 +34,14 @@ define(['postmonger'], (Postmonger) => {
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
 
 
-        // Validar si los campos están vacíos o no
         if (!dataExtension || !channel) {
             console.error(new Error('Data Extension and Channel are required'));
             return;
         }
 
-        // Construir el cuerpo de la solicitud
         const dataToSend = {
             dataExtension : dataExtension,
-            cellularNumber: cellularNumber, // Este valor se obtendrá de la dataExtension en el backend
+            cellularNumber: cellularNumber,
             channel: channel,
 
         };
