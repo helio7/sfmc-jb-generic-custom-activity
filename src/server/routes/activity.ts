@@ -49,6 +49,7 @@ const saveData = (req: any) => {
 interface RequestBody {
   cellularNumber: number;
   channel: string;
+  dataExtension: string;
 }
 
 interface ResponseBody {
@@ -62,68 +63,73 @@ interface ResponseBody {
 }
 
 const execute = async function (req: Request, res: Response) {
-  const { body } = req;
+  try {
+    const { body } = req;
 
-  console.log('Request Body:', body);
+    console.log('Request Body:', body);
 
-  const dataExtension = body.dataExtension;
-  const channel = body.channel;
-  const cellularNumber = body.cellularNumber;
+    const dataExtension = body.dataExtension;
+    const channel = body.channel;
+    const cellularNumber = body.cellularNumber;
 
-  console.log('Data Extension:', dataExtension);
-  console.log('Channel:', channel);
-  console.log('Cellular Number:', cellularNumber);
+    console.log('Data Extension:', dataExtension);
+    console.log('Channel:', channel);
+    console.log('Cellular Number:', cellularNumber);
 
-  // Verificar si los parámetros son undefined o null
-  if (!dataExtension || !channel || !cellularNumber) {
-      console.error(new Error('Missing input parameters'));
-      return res.status(400).send('Missing input parameters');
-  }
+    // Verificar si los parámetros son undefined o null
+    if (!dataExtension || !channel || !cellularNumber) {
+        console.error(new Error('Missing input parameters'));
+        return res.status(400).send('Missing input parameters');
+    }
 
-  const now = new Date();
-  const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
+    const now = new Date();
+    const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
 
-  const {
-    API_URL,
-    API_SESSION_ID,
-    API_COUNTRY
-  } = process.env;
+    const {
+      API_URL,
+      API_SESSION_ID,
+      API_COUNTRY
+    } = process.env;
 
-  console.log('Llamando a la API...');
-  const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-    method: 'post',
-    url: API_URL!,
-    data: {
-      cellularNumber: Number(cellularNumber),
-      channel: channel
-    } as RequestBody,
-    headers: {
-      Country: API_COUNTRY!,
-      'Session-Id': API_SESSION_ID!
-    },
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-  })
-    .catch((err) => {
-      offersRequestDurationTimestamps.end = performance.now();
-      if (err.response) {
-        const { data, status } = err.response;
-        console.error('Error de respuesta de la API:', status, data);
-      }
-      console.log('Error llamando a la API:');
-      console.log(err);
-      return null;
-    });
+    console.log('Llamando a la API...');
+    const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
+      method: 'post',
+      url: API_URL!,
+      data: {
+        cellularNumber: Number(cellularNumber),
+        channel: channel
+      } as RequestBody,
+      headers: {
+        Country: API_COUNTRY!,
+        'Session-Id': API_SESSION_ID!
+      },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    })
+      .catch((err) => {
+        offersRequestDurationTimestamps.end = performance.now();
+        if (err.response) {
+          const { data, status } = err.response;
+          console.error('Error de respuesta de la API:', status, data);
+        }
+        console.log('Error llamando a la API:');
+        console.log(err);
+        return null;
+      });
 
-  offersRequestDurationTimestamps.end = performance.now();
+    offersRequestDurationTimestamps.end = performance.now();
 
-  // Enviar la respuesta de la API como respuesta al cliente
-  if (packRenovableApiResponse) {
-    console.log('Respuesta de API:', packRenovableApiResponse.data);
-    return res.status(200).json(packRenovableApiResponse.data);
-  } else {
-    // Manejar el caso donde no hay respuesta de la API
-    console.error('Sin respuesta de la API');
-    return res.status(500).send('Error obteniendo respuesta de la API');
+    // Enviar la respuesta de la API como respuesta al cliente
+    if (packRenovableApiResponse) {
+      console.log('Respuesta de API:', packRenovableApiResponse.data);
+      return res.status(200).json(packRenovableApiResponse.data);
+    } else {
+      // Manejar el caso donde no hay respuesta de la API
+      console.error('Sin respuesta de la API');
+      return res.status(500).send('Error obteniendo respuesta de la API');
+    }
+  } catch (error) {
+    console.error('Error en la ejecución:', error);
+    return res.status(500).send('Error en la ejecución');
   }
 };
 
