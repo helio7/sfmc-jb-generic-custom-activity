@@ -29,23 +29,24 @@ define(['postmonger'], (Postmonger) => {
     });
 
     connection.on('clickedNext', () => {
-        const dataExtension = document.getElementById('dataExtension').value;
-        const channel = document.getElementById('channel').value;
-        const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
 
+        // if (!dataExtension || !channel) {
+        //     console.error(new Error('Data Extension and Channel are required'));
+        //     return;
+        // }
 
-        if (!dataExtension || !channel) {
-            console.error(new Error('Data Extension and Channel are required'));
-            return;
-        }
+        // const dataToSend = {
+        //     dataExtension : dataExtension,
+        //     cellularNumber: cellularNumber,
+        //     channel: channel,
 
-        const dataToSend = {
-            dataExtension : dataExtension,
-            cellularNumber: cellularNumber,
-            channel: channel,
+        // };
 
-        };
-        payload['arguments'].execute.inArguments = [dataToSend];
+        payload['arguments'].execute.inArguments = [
+            dataExtension = document.getElementById('dataExtension').value,
+            channel = document.getElementById('channel').value,
+            cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`
+        ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
     });
