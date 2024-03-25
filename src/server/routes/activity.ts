@@ -70,17 +70,18 @@ const execute = async function (req: Request, res: Response) {
 
     const dataExtension = body.dataExtension;
     const channel = body.channel;
-    const cellularNumber = body.cellularNumber;
 
     console.log('Data Extension:', dataExtension);
     console.log('Channel:', channel);
-    console.log('Cellular Number:', cellularNumber);
 
     // Verificar si los parámetros son undefined o null
-    if (!dataExtension || !channel || !cellularNumber) {
+    if (!dataExtension || !channel ) {
         console.error(new Error('Missing input parameters'));
         return res.status(400).send('Missing input parameters');
     }
+    const cellularNumber = 1121806490;
+    console.log('Cellular Number:', cellularNumber);
+
 
     const now = new Date();
     const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
@@ -96,7 +97,7 @@ const execute = async function (req: Request, res: Response) {
       method: 'post',
       url: API_URL!,
       data: {
-        cellularNumber: Number(cellularNumber),
+        cellularNumber: cellularNumber,
         channel: channel
       } as RequestBody,
       headers: {

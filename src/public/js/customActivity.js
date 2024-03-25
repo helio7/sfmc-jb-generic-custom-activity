@@ -10,7 +10,6 @@ define(['postmonger'], (Postmonger) => {
         connection.trigger('requestTokens');
         connection.trigger('requestEndpoints');
     });
-
     connection.on('initActivity', (data) => {
         if (data) payload = data;
 
@@ -22,30 +21,20 @@ define(['postmonger'], (Postmonger) => {
         ) ? data.arguments.execute.inArguments : [];
 
         const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
-        if (dataExtensionArg) $('#dataExtension').val(dataExtensionArg.dataExtension);
+        if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
 
         const channelArg = inArguments.find(arg => arg.channel);
-        if (channelArg) $('#channel').val(channelArg.channel);
+        if (channelArg) document.getElementById('channel').value = channelArg.channel;
     });
 
     connection.on('clickedNext', () => {
         const dataExtension = document.getElementById('dataExtension').value;
         const channel = document.getElementById('channel').value;
-        const cellularNumber = "1121806490"; // Hardcodea aquí el celular de prueba
-    
-        // Verificar que los valores no estén vacíos
-        if (!dataExtension || !channel) {
-            console.error(new Error('Missing input parameters'));
-            return;
-        }
-    
-        const dataToSend = {
-            dataExtension: dataExtension,
-            channel: channel,
-            cellularNumber: cellularNumber
-        };
-    
-        payload['arguments'].execute.inArguments = [dataToSend];
+
+        payload['arguments'].execute.inArguments = [
+            { dataExtension: dataExtension ? dataExtension : null },
+            { channel: channel ? channel : null }
+        ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
     });
