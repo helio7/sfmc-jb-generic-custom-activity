@@ -65,23 +65,24 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   try {
     const { body } = req;
-
     console.log('Request Body:', body);
 
-    const dataExtension = body.dataExtension;
-    const channel = body.channel;
+    // const dataExtension = body.dataExtension;
+    // const channel = body.channel;
 
+    const cellularNumber = 1121806490;
+    const channel = "PDC";
+    const dataExtension = "TestCA";
+
+    console.log('Cellular Number:', cellularNumber);
     console.log('Data Extension:', dataExtension);
     console.log('Channel:', channel);
 
     // Verificar si los parámetros son undefined o null
-    if (!dataExtension || !channel ) {
-        console.error(new Error('Missing input parameters'));
-        return res.status(400).send('Missing input parameters');
-    }
-    const cellularNumber = 1121806490;
-    console.log('Cellular Number:', cellularNumber);
-
+    // if (!dataExtension || !channel ) {
+    //     console.error(new Error('Missing input parameters'));
+    //     return res.status(400).send('Missing input parameters');
+    // }
 
     const now = new Date();
     const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
