@@ -1,4 +1,3 @@
-"use strict";
 import https from 'https';
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -67,9 +66,6 @@ const execute = async function (req: Request, res: Response) {
     const { body } = req;
     console.log('Request Body:', body);
 
-    // const dataExtension = body.dataExtension;
-    // const channel = body.channel;
-
     const cellularNumber = 1121806490;
     const channel = "PDC";
     const dataExtension = "TestCA";
@@ -79,13 +75,13 @@ const execute = async function (req: Request, res: Response) {
     console.log('Channel:', channel);
 
     // Verificar si los parámetros son undefined o null
-    // if (!dataExtension || !channel ) {
-    //     console.error(new Error('Missing input parameters'));
-    //     return res.status(400).send('Missing input parameters');
-    // }
+    if (!dataExtension || !channel || !cellularNumber) {
+      console.error(new Error('Missing input parameters'));
+      return res.status(400).send('Missing input parameters');
+    }
 
-    const now = new Date();
-    const offersRequestDurationTimestamps = { start: performance.now(), end: null as null | number };
+    const now = Date.now();
+    const offersRequestDurationTimestamps = { start: now, end: null as null | number };
 
     const {
       API_URL,
@@ -106,19 +102,9 @@ const execute = async function (req: Request, res: Response) {
         'Session-Id': API_SESSION_ID!
       },
       httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    })
-      .catch((err) => {
-        offersRequestDurationTimestamps.end = performance.now();
-        if (err.response) {
-          const { data, status } = err.response;
-          console.error('Error de respuesta de la API:', status, data);
-        }
-        console.log('Error llamando a la API:');
-        console.log(err);
-        return null;
-      });
+    });
 
-    offersRequestDurationTimestamps.end = performance.now();
+    offersRequestDurationTimestamps.end = Date.now();
 
     // Enviar la respuesta de la API como respuesta al cliente
     if (packRenovableApiResponse) {
