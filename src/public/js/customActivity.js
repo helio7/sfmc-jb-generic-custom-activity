@@ -40,9 +40,9 @@ define(['postmonger'], (Postmonger) => {
         }
 
         const dataToSend = {
-            dataExtension : dataExtension,
-            cellularNumber: cellularNumber,
-            channel: channel,
+            dataExtension,
+            cellularNumber,
+            channel,
 
         };
         payload['arguments'].execute.inArguments = [dataToSend];
