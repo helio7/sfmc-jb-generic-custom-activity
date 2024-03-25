@@ -45,7 +45,6 @@ define(['postmonger'], (Postmonger) => {
             channel: channel,
 
         };
-
         payload['arguments'].execute.inArguments = [dataToSend];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);

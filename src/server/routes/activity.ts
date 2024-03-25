@@ -70,7 +70,9 @@ const execute = async function (req: Request, res: Response) {
     // const channel = "PDC";
     // const dataExtension = "TestCA";
 
-    const { cellularNumber, channel, dataExtension } = body;
+    const dataExtension = body.dataExtension;
+    const channel = body.channel;
+    const cellularNumber = body.cellularNumber; 
 
 
     console.log('Cellular Number:', cellularNumber);
