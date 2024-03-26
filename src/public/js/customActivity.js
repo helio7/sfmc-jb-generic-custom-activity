@@ -14,38 +14,27 @@ define(['postmonger'], (Postmonger) => {
     connection.on('initActivity', (data) => {
         if (data) payload = data;
 
-        const inArguments = Boolean(
-            data.arguments &&
-            data.arguments.execute &&
-            data.arguments.execute.inArguments &&
-            data.arguments.execute.inArguments.length > 0
-        ) ? data.arguments.execute.inArguments : [];
+        // const inArguments = Boolean(
+        //     data.arguments &&
+        //     data.arguments.execute &&
+        //     data.arguments.execute.inArguments &&
+        //     data.arguments.execute.inArguments.length > 0
+        // ) ? data.arguments.execute.inArguments : [];
 
-        const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
-        if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
+        // const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
+        // if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
 
-        const channelArg = inArguments.find(arg => arg.channel);
-        if (channelArg) document.getElementById('channel').value = channelArg.channel;
+        // const channelArg = inArguments.find(arg => arg.channel);
+        // if (channelArg) document.getElementById('channel').value = channelArg.channel;
     });
 
     connection.on('clickedNext', () => {
-        const dataExtension = document.getElementById('dataExtension').value;
-        const channel = document.getElementById('channel').value;
-        const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
+        payload['arguments'].execute.inArguments = [
 
-
-        if (!dataExtension || !channel) {
-            console.error(new Error('Data Extension and Channel are required'));
-            return;
-        }
-
-        const dataToSend = {
-            dataExtension,
-            cellularNumber,
-            channel,
-
-        };
-        payload['arguments'].execute.inArguments = [dataToSend];
+            {   dataExtension : document.getElementById('dataExtension').value ,
+                channel : document.getElementById('channel').value,
+                cellularNumber : `{{Contact.Attribute."${dataExtension}".cellular_number}}` },
+        ];
         payload['metaData'].isConfigured = true;
         connection.trigger('updateActivity', payload);
     });
