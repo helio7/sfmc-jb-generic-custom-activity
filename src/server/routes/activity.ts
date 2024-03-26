@@ -64,38 +64,15 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   try {
     const { body } = req;
-    let parsedBody;
-
-    // Verifica si el body es un Buffer
-    if (Buffer.isBuffer(body)) {
-      // Convierte el body Buffer a una cadena
-      parsedBody = body.toString('utf8');
-    } else if (typeof body === 'string') {
-      // Si es una cadena, usar directamente
-      parsedBody = body;
-    } else {
-      console.error(new Error('Invalid request body'));
-      return res.status(400).send('Invalid request body');
-    }
-
-    // Parsea el cuerpo de la solicitud como JSON
-    let requestBody;
-    try {
-      requestBody = JSON.parse(parsedBody);
-    } catch (error) {
-      console.error('Error parsing JSON:', error);
-      return res.status(400).send('Invalid JSON in request body');
-    }
-
-    console.log('Request Body:', requestBody);
+    console.log('Request Body:', body);
 
     // const cellularNumber = 1121806490;
     // const channel = "PDC";
     // const dataExtension = "TestCA";
 
-    const dataExtension = requestBody.dataExtension;
-    const channel = requestBody.channel;
-    const cellularNumber = requestBody.cellularNumber;
+    const dataExtension = body.dataExtension;
+    const channel = body.channel;
+    const cellularNumber = body.cellularNumber; 
 
 
     console.log('Cellular Number:', cellularNumber);
@@ -135,7 +112,6 @@ const execute = async function (req: Request, res: Response) {
 
     if (packRenovableApiResponse) {
       console.log('Respuesta de API:', packRenovableApiResponse.data);
-      // return res.status(200).send(packRenovableApiResponse.data);
       return res.status(200).json(packRenovableApiResponse.data);
     } else {
 
