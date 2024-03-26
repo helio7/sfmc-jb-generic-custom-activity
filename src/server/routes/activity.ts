@@ -64,7 +64,8 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   try {
     const { body } = req;
-    console.log('Request Body:', body);
+    const parsedBody = JSON.parse(body.toString('utf8'));
+    console.log('Request Body:', parsedBody);
 
     // const cellularNumber = 1121806490;
     // const channel = "PDC";
