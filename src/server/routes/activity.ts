@@ -64,16 +64,28 @@ interface ResponseBody {
 const execute = async function (req: Request, res: Response) {
   try {
     const { body } = req;
-    const parsedBody = JSON.parse(body.toString('utf8'));
-    console.log('Request Body:', parsedBody);
+
+    let parsedBody;
+
+    // Verifica si el body es un Buffer
+    if (Buffer.isBuffer(body)) {
+      // Convierte el body Buffer a una cadena
+      parsedBody = body.toString('utf8');
+    } else {
+      // Si no es un Buffer, asume que ya es una cadena
+      parsedBody = body;
+    }
+
+    const requestBody = JSON.parse(parsedBody);
+    console.log('Request Body:', requestBody);
 
     // const cellularNumber = 1121806490;
     // const channel = "PDC";
     // const dataExtension = "TestCA";
 
-    const dataExtension = body.dataExtension;
-    const channel = body.channel;
-    const cellularNumber = body.cellularNumber; 
+    const dataExtension = requestBody.dataExtension;
+    const channel = requestBody.channel;
+    const cellularNumber = requestBody.cellularNumber;
 
 
     console.log('Cellular Number:', cellularNumber);
