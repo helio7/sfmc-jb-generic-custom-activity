@@ -29,9 +29,13 @@ define(['postmonger'], (Postmonger) => {
     });
 
     connection.on('clickedNext', () => {
+
         const dataExtension = document.getElementById('dataExtension').value;
         const channel = document.getElementById('channel').value;
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
+
+        console.log('Data Extension:', dataExtension);
+        console.log('Channel:', channel);
 
 
         if (!dataExtension || !channel) {
