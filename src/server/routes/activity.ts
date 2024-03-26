@@ -112,7 +112,6 @@ const execute = async function (req: Request, res: Response) {
 
     if (packRenovableApiResponse) {
       console.log('Respuesta de API:', packRenovableApiResponse.data);
-      // return res.status(200).send(packRenovableApiResponse.data);
       return res.status(200).json(packRenovableApiResponse.data);
     } else {
 
