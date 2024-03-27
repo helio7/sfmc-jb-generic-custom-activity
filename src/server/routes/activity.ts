@@ -1,7 +1,12 @@
-import axios from 'axios';
-import { Request, Response } from 'express';
 
-interface ExecuteLog {
+'use strict';
+import https from 'https';
+import axios from 'axios';
+import { Request } from 'express';
+import { Response } from 'express';
+import { verify } from 'jsonwebtoken';
+
+const logExecuteData: {
   body: any;
   headers: any;
   trailers: any;
@@ -19,13 +24,11 @@ interface ExecuteLog {
   protocol: any;
   secure: any;
   originalUrl: any;
-}
+}[] = [];
 
-const logExecuteData: ExecuteLog[] = [];
-
-const saveData = (req: Request) => {
-  // Guardar los datos de la solicitud en un array accesible para la aplicación principal.
-  logExecuteData.push({
+const saveData = (req: any) => {
+  // Put data from the request in an array accessible to the main app.
+  exports.logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -37,109 +40,132 @@ const saveData = (req: Request) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.hostname,
+    host: req.host,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
     secure: req.secure,
     originalUrl: req.originalUrl
   });
-};
-
-interface RequestBody {
-  cellularNumber: number;
-  channel: string;
-  dataExtension: string;
 }
 
-interface ResponseBody {
-  responseCode: number;
-  responseMessage: string;
-  handle: number;
-  pack: {
-    packId: string;
-    description: string;
-  }[];
+interface InputParamenter {
+  channel?: string;
+  dataExtension?: string;
+}
+
+  interface RequestBody {
+    cellularNumber: number;
+    channel: string;
+  }
+  
+
+interface DecodedBody {
+  inArguments?: InputParamenter[];
 }
 
 const execute = async function (req: Request, res: Response) {
-  try {
-    const { body } = req;
-    console.log('Request Body:', body);
+  const { body } = req;
+  const {
+    API_URL,
+    API_SESSION_ID,
+    API_COUNTRY
+  } = process.env;
 
-    const { cellularNumber, channel, dataExtension } = body as RequestBody;
 
-    console.log('Cellular Number:', cellularNumber);
-    console.log('Data Extension:', dataExtension);
-    console.log('Channel:', channel);
+    body.toString('utf8'),
+    { algorithms: ['HS256'], complete: false },
+    async (err: any, decoded?: any) => {
+      if (err) {
+        console.error(err);
+        return res.status(401).end();
+      }
+      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
+        const { value, expiresAt } = req.app.locals.token;
 
-    if (!dataExtension || !channel || !cellularNumber) {
-      console.error(new Error('Missing input parameters'));
-      return res.status(400).send('Missing input parameters');
+        const now = new Date();
+
+        let balanceValidationFailed = false;
+
+        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+  
+          let cellularNumber: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.cellularNumber) {
+              cellularNumber = argument.cellularNumber;
+              break;
+            }
+
+            let channel: string | null = null;
+            for (const argument of decoded.inArguments) {
+              if (argument.channel) {
+                channel = argument.channel;
+                break;
+              }
+          }
+          if (!cellularNumber) return res.status(400).send('Input parameter is missing.');
+  
+          console.log('Getting balance data...');
+          const packRenovableApiResponse : { data: RequestBody } | null = await axios({
+            method: 'post',
+            url: API_URL,
+            data: {
+              cellularNumber: cellularNumber,
+              channel: channel
+            } as RequestBody,
+            headers: {
+              Country: API_COUNTRY!,
+              'Session-Id': API_SESSION_ID!
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Response');
+              console.log(res.data);
+              return res.data;
+            })
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
+            });
+          if (!packRenovableApiResponse) balanceValidationFailed = true;
+
+        }
+  
+        res.status(200).send({
+          balanceValidationFailed,
+        });
+      } else {
+        console.error('inArguments invalid.');
+        return res.status(400).end();
+      }
     }
-
-    const now = Date.now();
-    const offersRequestDurationTimestamps = { start: now, end: null as null | number };
-
-    const {
-      API_URL,
-      API_SESSION_ID,
-      API_COUNTRY
-    } = process.env;
-
-    console.log('Llamando a la API...');
-    const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-      method: 'post',
-      url: API_URL!,
-      data: {
-        cellularNumber: cellularNumber,
-        channel: channel
-      } as RequestBody,
-      headers: {
-        Country: API_COUNTRY!,
-        'Session-Id': API_SESSION_ID!
-      },
-      // httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    });
-
-    offersRequestDurationTimestamps.end = Date.now();
-
-    if (packRenovableApiResponse) {
-      console.log('Respuesta de API:', packRenovableApiResponse.data);
-      return res.status(200).json(packRenovableApiResponse.data);
-    } else {
-      console.error('Sin respuesta de la API');
-      return res.status(500).send('Error obteniendo respuesta de la API');
-    }
-  } catch (error) {
-    console.error('Error en la ejecución:', error);
-    return res.status(500).send('Error en la ejecución');
-  }
 };
+
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Edit');
+  res.send(200, 'Edit');
 };
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Save'); 
+  res.send(200, 'Save');
 };
 
 const publish = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Publish');
+  res.send(200, 'Publish');
 };
 
 const validate = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Validate');
+  res.send(200, 'Validate');
 };
 
 const stop = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Stop');
+  res.send(200, 'Stop');
 };
 
 export default {
