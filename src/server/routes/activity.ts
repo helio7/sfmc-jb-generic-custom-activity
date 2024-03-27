@@ -1,4 +1,3 @@
-'use strict';
 import { Request, Response } from "express";
 import { performance } from "perf_hooks";
 import https from 'https';
@@ -24,7 +23,7 @@ interface ExecuteLog {
   originalUrl: any;
 }
 const logExecuteData: ExecuteLog[] = [];
-const logData = (req: Request) => { // Log data from the request and put it in an array accessible to the main app.
+const logData = (req: Request) => {
   logExecuteData.push({
     body: req.body,
     headers: req.headers,
@@ -138,10 +137,6 @@ const execute = async function (req: Request, res: Response) {
 
         const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
         let packsValidationFailed = false;
-        
-        console.log('Cellular Number:', cellularNumber);
-        console.log('Data Extension:', dataExtension);
-        console.log('Channel:', channel);
 
         const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
           method: 'post',
@@ -155,7 +150,6 @@ const execute = async function (req: Request, res: Response) {
         })
           .catch((err) => {
             offersRequestDurationTimestamps.end = performance.now();
-           
             if (err.response) {
               const { data, status } = err.response;
               specialConsoleLog({
@@ -182,7 +176,7 @@ const execute = async function (req: Request, res: Response) {
         let packPrice: number = 0.00;
 
 
-        return res.end(
+        return res.send(
           formatResponse({
             ...response,
             mensajeTraducido: messageToSend,
@@ -194,33 +188,32 @@ const execute = async function (req: Request, res: Response) {
         console.error('inArguments invalid.');
         return res.status(400).end();
       }
-    }
-    
+    };
 };
 
 const edit = (req: any, res: any) => {
   logData(req);
-  res.send(200, 'Edit');
+  res.status(200).send('Edit');
 };
 
 const save = (req: any, res: any) => {
   logData(req);
-  res.send(200, 'Save');
+  res.status(200).send('Save');
 };
 
 const publish = (req: any, res: any) => {
   logData(req);
-  res.send(200, 'Publish');
+  res.status(200).send('Publish');
 };
 
 const validate = (req: any, res: any) => {
   logData(req);
-  res.send(200, 'Validate');
+  res.status(200).send('Validate');
 };
 
 const stop = (req: any, res: any) => {
   logData(req);
-  res.send(200, 'Stop');
+  res.status(200).send('Stop');
 };
 
 function millisToMinutesAndSeconds(millis: number): string {
