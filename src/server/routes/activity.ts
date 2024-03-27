@@ -1,8 +1,10 @@
+'use strict';
+import { Request, Response } from "express";
+import { performance } from "perf_hooks";
 import https from 'https';
 import axios from 'axios';
-import { Request, Response } from 'express';
 
-const logExecuteData: {
+interface ExecuteLog {
   body: any;
   headers: any;
   trailers: any;
@@ -20,10 +22,9 @@ const logExecuteData: {
   protocol: any;
   secure: any;
   originalUrl: any;
-}[] = [];
-
-const saveData = (req: any) => {
-  // Put data from the request in an array accessible to the main app.
+}
+const logExecuteData: ExecuteLog[] = [];
+const logData = (req: Request) => { // Log data from the request and put it in an array accessible to the main app.
   logExecuteData.push({
     body: req.body,
     headers: req.headers,
@@ -36,7 +37,7 @@ const saveData = (req: any) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.hostname,
+    host: req.host,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -45,10 +46,22 @@ const saveData = (req: any) => {
   });
 }
 
+interface InputParamenter {
+  cellularNumber?: string;
+  dataExtension?: string;
+  channel?: string;
+}
+interface DecodedBody {
+  inArguments?: InputParamenter[];
+}
+interface DurationTimestampsPair {
+  start: number | null;
+  end: number | null;
+}
+
 interface RequestBody {
   cellularNumber: number;
   channel: string;
-  dataExtension: string;
 }
 
 interface ResponseBody {
@@ -61,93 +74,184 @@ interface ResponseBody {
   }[];
 }
 
+interface CaResponse {
+  puedeComprar: boolean,
+  mensajeTraducido: string,
+  error: boolean,
+  packIncentivado: string,
+  precioPackIncentivado: number,
+}
+
+// We use this function to output number properties as float numbers even if they're actually integers.
+function formatResponse({
+  puedeComprar,
+  mensajeTraducido,
+  error,
+  packIncentivado,
+  precioPackIncentivado,
+}: CaResponse): string {
+  return `{"puedeComprar":${puedeComprar ? 'true' : 'false'},"mensajeTraducido":"${mensajeTraducido}","error":${error ? 'true' : 'false'},"packIncentivado":"${packIncentivado}","precioPackIncentivado":${precioPackIncentivado.toFixed(2)}}`;
+}
+
 const execute = async function (req: Request, res: Response) {
-  try {
-    const { body } = req;
-    console.log('Request Body:', body);
+  const { body } = req;
 
-    // const cellularNumber = 1121806490;
-    // const channel = "PDC";
-    // const dataExtension = "TestCA";
+  body.toString('utf8'),
+    { algorithms: ['HS256'], complete: false },
+    async (err: any, decoded?: DecodedBody) => {
+      if (err) {
+        console.error(err);
+        return res.status(401).end();
+      }
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200);
+      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
 
-    const dataExtension = body.dataExtension;
-    const channel = body.channel;
-    const cellularNumber = body.cellularNumber; 
+        const response: CaResponse = {
+          puedeComprar: false,
+          mensajeTraducido: '',
+          error: true,
+          packIncentivado: '',
+          precioPackIncentivado: 0.00,
+        };
+
+        let cellularNumber: string | null = null;
+        let dataExtension: string | null = null;
+        let channel: string | null = null;
+        for (const argument of decoded.inArguments) {
+          if (argument.dataExtension) dataExtension = argument.dataExtension;
+          else if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+          else if (argument.channel) channel = argument.channel;
+          if (cellularNumber && dataExtension && channel) break;
+        }
+
+        const inputData: RequestBody = {
+          cellularNumber: Number(cellularNumber),
+          channel: channel!
+        };
+
+        const {
+          API_URL,
+          API_SESSION_ID,
+          API_COUNTRY
+        } = process.env;
+
+        const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+        let packsValidationFailed = false;
+        
+        console.log('Cellular Number:', cellularNumber);
+        console.log('Data Extension:', dataExtension);
+        console.log('Channel:', channel);
+
+        const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
+          method: 'post',
+          url: API_URL!,
+          data: inputData,
+          headers: {
+            Country: API_COUNTRY!,
+            'Session-Id': API_SESSION_ID!,
+          },
+          httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        })
+          .catch((err) => {
+            offersRequestDurationTimestamps.end = performance.now();
+           
+            if (err.response) {
+              const { data, status } = err.response;
+              specialConsoleLog({
+                phoneNumber: cellularNumber!,
+                eventName: 'OFFERS_REQUEST_FAILED',
+                durationTimestamps: offersRequestDurationTimestamps,
+                data: { data, status },
+              });
+            }
+            console.log('Error when calling the offers API:');
+            console.log(err);
+            return null;
+          });
+        offersRequestDurationTimestamps.end = performance.now();
+
+        specialConsoleLog({
+          phoneNumber: cellularNumber!,
+          eventName: 'OFFERS_REQUEST_SUCCEDED',
+          durationTimestamps: offersRequestDurationTimestamps,
+          data: inputData,
+        });
+
+        let messageToSend = '';
+        let packPrice: number = 0.00;
 
 
-    console.log('Cellular Number:', cellularNumber);
-    console.log('Data Extension:', dataExtension);
-    console.log('Channel:', channel);
-
-    if (!dataExtension || !channel || !cellularNumber) {
-      console.error(new Error('Missing input parameters'));
-      return res.status(400).send('Missing input parameters');
+        return res.end(
+          formatResponse({
+            ...response,
+            mensajeTraducido: messageToSend,
+            error: packsValidationFailed ? true : false,
+            precioPackIncentivado: packPrice,
+          }),
+        );
+      } else {
+        console.error('inArguments invalid.');
+        return res.status(400).end();
+      }
     }
-
-    const now = Date.now();
-    const offersRequestDurationTimestamps = { start: now, end: null as null | number };
-
-    const {
-      API_URL,
-      API_SESSION_ID,
-      API_COUNTRY
-    } = process.env;
-
-    console.log('Llamando a la API...');
-    const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-      method: 'post',
-      url: API_URL!,
-      data: {
-        cellularNumber: cellularNumber,
-        channel: channel
-      } as RequestBody,
-      headers: {
-        Country: API_COUNTRY!,
-        'Session-Id': API_SESSION_ID!
-      },
-      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    });
-
-    offersRequestDurationTimestamps.end = Date.now();
-
-    if (packRenovableApiResponse) {
-      console.log('Respuesta de API:', packRenovableApiResponse.data);
-      return res.status(200).json(packRenovableApiResponse.data);
-    } else {
-
-      console.error('Sin respuesta de la API');
-      return res.status(500).send('Error obteniendo respuesta de la API');
-    }
-  } catch (error) {
-    console.error('Error en la ejecución:', error);
-    return res.status(500).send('Error en la ejecución');
-  }
+    
 };
 
 const edit = (req: any, res: any) => {
-  saveData(req);
-  res.status(200).send('Edit');
+  logData(req);
+  res.send(200, 'Edit');
 };
 
 const save = (req: any, res: any) => {
-  saveData(req);
-  res.status(200).send('Save'); 
+  logData(req);
+  res.send(200, 'Save');
 };
 
 const publish = (req: any, res: any) => {
-  saveData(req);
-  res.status(200).send('Publish');
+  logData(req);
+  res.send(200, 'Publish');
 };
 
 const validate = (req: any, res: any) => {
-  saveData(req);
-  res.status(200).send('Validate');
+  logData(req);
+  res.send(200, 'Validate');
 };
 
 const stop = (req: any, res: any) => {
-  saveData(req);
-  res.status(200).send('Stop');
+  logData(req);
+  res.send(200, 'Stop');
 };
+
+function millisToMinutesAndSeconds(millis: number): string {
+  const minutes = Math.floor(millis / 60000);
+  const seconds = ((millis % 60000) / 1000).toFixed(0);
+  return Number(seconds) == 60 ? minutes + 1 + 'm' : minutes + 'm ' + (Number(seconds) < 10 ? '0' : '') + seconds + 's';
+}
+
+export function specialConsoleLog({
+  phoneNumber,
+  eventName,
+  durationTimestamps,
+  data,
+}: {
+  phoneNumber: string,
+  eventName: string,
+  durationTimestamps: DurationTimestampsPair,
+  data: any,
+}): void {
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+  const { start, end } = durationTimestamps;
+  let duration = '-';
+  if (start && end) duration = millisToMinutesAndSeconds(end - start);
+
+  const jsonifiedData = JSON.stringify(data);
+
+  console.log(`${todayDate}|${currentTime}|${phoneNumber}|${eventName}|${duration}|${jsonifiedData}`);
+}
 
 export default {
   logExecuteData,
