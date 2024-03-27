@@ -23,7 +23,7 @@ interface ExecuteLog {
   originalUrl: any;
 }
 const logExecuteData: ExecuteLog[] = [];
-const logData = (req: Request) => {
+const logData = (req: Request) => { // Log data from the request and put it in an array accessible to the main app.
   logExecuteData.push({
     body: req.body,
     headers: req.headers,
@@ -36,7 +36,7 @@ const logData = (req: Request) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.host,
+    host: req.hostname,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -163,9 +163,8 @@ const execute = async function (req: Request, res: Response) {
             console.log(err);
             return null;
           });
-        offersRequestDurationTimestamps.end = performance.now();
-
-        specialConsoleLog({
+          offersRequestDurationTimestamps.end = performance.now();
+          specialConsoleLog({
           phoneNumber: cellularNumber!,
           eventName: 'OFFERS_REQUEST_SUCCEDED',
           durationTimestamps: offersRequestDurationTimestamps,
@@ -175,8 +174,20 @@ const execute = async function (req: Request, res: Response) {
         let messageToSend = '';
         let packPrice: number = 0.00;
 
+        // Process packRenovableApiResponse if it's not null
+        if (packRenovableApiResponse) {
+          const { data } = packRenovableApiResponse;
 
-        return res.send(
+          // Example logic, replace with your actual processing
+          if (data.responseCode === 200) {
+            messageToSend = 'Success';
+            packPrice = 10.5;
+          } else {
+            messageToSend = 'Failed';
+          }
+        }
+
+        return res.end(
           formatResponse({
             ...response,
             mensajeTraducido: messageToSend,
@@ -255,3 +266,4 @@ export default {
   validate,
   stop,
 };
+
