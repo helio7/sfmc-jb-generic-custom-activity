@@ -94,6 +94,7 @@ function formatResponse({
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
+  
 
   body.toString('utf8'),
     { algorithms: ['HS256'], complete: false },
@@ -113,6 +114,7 @@ const execute = async function (req: Request, res: Response) {
           packIncentivado: '',
           precioPackIncentivado: 0.00,
         };
+        
 
         let cellularNumber: string | null = null;
         let dataExtension: string | null = null;
@@ -123,6 +125,11 @@ const execute = async function (req: Request, res: Response) {
           else if (argument.channel) channel = argument.channel;
           if (cellularNumber && dataExtension && channel) break;
         }
+        
+
+    console.log('Cellular Number:', cellularNumber);
+    console.log('Data Extension:', dataExtension);
+    console.log('Channel:', channel);
 
         const inputData: RequestBody = {
           cellularNumber: Number(cellularNumber),
@@ -137,6 +144,7 @@ const execute = async function (req: Request, res: Response) {
 
         const offersRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
         let packsValidationFailed = false;
+        
 
         const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
           method: 'post',
@@ -159,6 +167,8 @@ const execute = async function (req: Request, res: Response) {
                 data: { data, status },
               });
             }
+            console.log( packRenovableApiResponse?.data)
+
             console.log('Error when calling the offers API:');
             console.log(err);
             return null;
@@ -186,6 +196,12 @@ const execute = async function (req: Request, res: Response) {
             messageToSend = 'Failed';
           }
         }
+
+        console.log('Cellular Number:', cellularNumber);
+        console.log('Data Extension:', dataExtension);
+        console.log('Channel:', channel);
+        console.log( packRenovableApiResponse?.data)
+
 
         return res.end(
           formatResponse({
