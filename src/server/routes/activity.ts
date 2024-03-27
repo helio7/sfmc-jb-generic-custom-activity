@@ -4,7 +4,6 @@ import https from 'https';
 import axios from 'axios';
 import { Request } from 'express';
 import { Response } from 'express';
-import { verify } from 'jsonwebtoken';
 
 const logExecuteData: {
   body: any;
@@ -50,8 +49,8 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-  channel?: string;
   dataExtension?: string;
+  channel?: string;
 }
 
   interface RequestBody {
@@ -81,12 +80,8 @@ const execute = async function (req: Request, res: Response) {
         return res.status(401).end();
       }
       if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-        const { value, expiresAt } = req.app.locals.token;
-
+        
         const now = new Date();
-
-        let balanceValidationFailed = false;
-
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
   
           let cellularNumber: string | null = null;
@@ -103,9 +98,9 @@ const execute = async function (req: Request, res: Response) {
                 break;
               }
           }
-          if (!cellularNumber) return res.status(400).send('Input parameter is missing.');
+          if (!cellularNumber || !channel) return res.status(400).send('Input parameter is missing.');
   
-          console.log('Getting balance data...');
+          console.log('LLamando a la API..');
           const packRenovableApiResponse : { data: RequestBody } | null = await axios({
             method: 'post',
             url: API_URL,
@@ -128,12 +123,10 @@ const execute = async function (req: Request, res: Response) {
               console.log('Error:');
               console.log(err);
             });
-          if (!packRenovableApiResponse) balanceValidationFailed = true;
-
         }
-  
+
         res.status(200).send({
-          balanceValidationFailed,
+          // balanceValidationFailed,
         });
       } else {
         console.error('inArguments invalid.');
