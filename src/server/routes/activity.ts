@@ -66,6 +66,10 @@ const execute = async function (req: Request, res: Response) {
   const { body } = req;
   const { env: { JWT_SECRET } } = process;
 
+  console.log('1Cellular Number:', body.cellularNumber);
+  console.log('1Data Extension:', body.dataExtension);
+  console.log('1Channel:', body.channel);
+
   if (!body) {
     console.error(new Error('invalid jwtdata'));
     return res.status(401).end();
@@ -92,8 +96,7 @@ const execute = async function (req: Request, res: Response) {
 
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        let accountBalance = 0.0;
-        let responce;
+        let response;
   
         if (!ValidationFailed) {
             const {
@@ -120,6 +123,11 @@ const execute = async function (req: Request, res: Response) {
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
           console.log('LLamando a la API..');
+
+          console.log('2Cellular Number:', body.cellularNumber);
+          console.log('2Data Extension:', dataExtension);
+          console.log('2Channel:', channel);
+
           const packRenovableApiResponse : { data: RequestBody } | null = await axios({
             method: 'post',
             url: API_URL,
@@ -143,11 +151,11 @@ const execute = async function (req: Request, res: Response) {
               console.log(err);
             });
           if (!packRenovableApiResponse) ValidationFailed = true;
-          else responce = packRenovableApiResponse.data;
+          else response = packRenovableApiResponse.data;
         }
   
         res.status(200).send({
-            responce,
+            response,
           ValidationFailed,
         });
       } else {
