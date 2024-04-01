@@ -1,9 +1,9 @@
-
 'use strict';
 import https from 'https';
 import axios from 'axios';
 import { Request } from 'express';
 import { Response } from 'express';
+import { verify } from 'jsonwebtoken';
 
 const logExecuteData: {
   body: any;
@@ -49,30 +49,35 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-  dataExtension?: string;
-  channel?: string;
-}
-
-  interface RequestBody {
-    cellularNumber: number;
-    channel: string;
+    dataExtension?: string;
+    channel?: string;
   }
-  
 
 interface DecodedBody {
   inArguments?: InputParamenter[];
 }
 
+interface RequestBody {
+    cellularNumber: number;
+    channel: string;
+  }
+
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
-  const {
-    API_URL,
-    API_SESSION_ID,
-    API_COUNTRY
-  } = process.env;
+  const { env: { JWT_SECRET } } = process;
 
+  if (!body) {
+    console.error(new Error('invalid jwtdata'));
+    return res.status(401).end();
+  }
+  if (!JWT_SECRET) {
+    console.error(new Error('jwtSecret not provided'));
+    return res.status(401).end();
+  }
 
+  verify(
     body.toString('utf8'),
+    JWT_SECRET,
     { algorithms: ['HS256'], complete: false },
     async (err: any, decoded?: any) => {
       if (err) {
@@ -80,33 +85,47 @@ const execute = async function (req: Request, res: Response) {
         return res.status(401).end();
       }
       if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-        
-        const now = new Date();
-        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-  
-          let cellularNumber: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.cellularNumber) {
-              cellularNumber = argument.cellularNumber;
-              break;
-            }
 
-            let channel: string | null = null;
-            for (const argument of decoded.inArguments) {
-              if (argument.channel) {
-                channel = argument.channel;
-                break;
-              }
+        const now = new Date();
+
+        let ValidationFailed = false;
+
+        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+        let accountBalance = 0.0;
+        let responce;
+  
+        if (!ValidationFailed) {
+            const {
+                API_URL,
+                API_SESSION_ID,
+                API_COUNTRY
+              } = process.env;
+  
+          let dataExtension: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.dataExtension) {
+                dataExtension = argument.dataExtension;
+              break;
+            }  
           }
-          if (!cellularNumber || !channel) return res.status(400).send('Input parameter is missing.');
+          let channel: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.channel) {
+                channel = argument.channel;
+              break;
+            }  
+          }
+
+          if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
           console.log('LLamando a la API..');
           const packRenovableApiResponse : { data: RequestBody } | null = await axios({
             method: 'post',
             url: API_URL,
             data: {
-              cellularNumber: cellularNumber,
-              channel: channel
+              cellularNumber: body.cellularNumber,
+              channel: body.channel
             } as RequestBody,
             headers: {
               Country: API_COUNTRY!,
@@ -123,18 +142,21 @@ const execute = async function (req: Request, res: Response) {
               console.log('Error:');
               console.log(err);
             });
+          if (!packRenovableApiResponse) ValidationFailed = true;
+          else responce = packRenovableApiResponse.data;
         }
-
+  
         res.status(200).send({
-          // balanceValidationFailed,
+            responce,
+          ValidationFailed,
         });
       } else {
         console.error('inArguments invalid.');
         return res.status(400).end();
       }
-    }
+    },
+  );
 };
-
 
 const edit = (req: any, res: any) => {
   saveData(req);
@@ -156,7 +178,7 @@ const validate = (req: any, res: any) => {
   res.send(200, 'Validate');
 };
 
-const stop = (req: any, res: any) => {
+const stop = (req: any, res: any) => {  
   saveData(req);
   res.send(200, 'Stop');
 };
