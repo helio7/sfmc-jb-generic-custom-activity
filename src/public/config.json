@@ -1,4 +1,4 @@
-{
+{   "key": "e06f04b5-a494-4312-983f-35afd1001d4d",
     "workflowApiVersion": "1.1",
     "metaData": {
         "icon": "images/icon.png",
@@ -37,7 +37,7 @@
         }
     },
     "configurationArguments": {
-        "applicationExtensionKey": "DINAMICALLY_REPLACED",
+        "applicationExtensionKey": "e06f04b5-a494-4312-983f-35afd1001d4d",
         "save": {
             "url": "DINAMICALLY_REPLACED",
             "headers": "DINAMICALLY_REPLACED",
