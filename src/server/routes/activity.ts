@@ -1,9 +1,6 @@
-'use strict';
 import https from 'https';
 import axios from 'axios';
-import { Request } from 'express';
-import { Response } from 'express';
-import { verify } from 'jsonwebtoken';
+import { Request, Response } from 'express';
 
 const logExecuteData: {
   body: any;
@@ -27,7 +24,7 @@ const logExecuteData: {
 
 const saveData = (req: any) => {
   // Put data from the request in an array accessible to the main app.
-  exports.logExecuteData.push({
+  logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -39,7 +36,7 @@ const saveData = (req: any) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.host,
+    host: req.hostname,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -48,19 +45,12 @@ const saveData = (req: any) => {
   });
 }
 
-interface InputParamenter {
-  dataExtension: string;
-  channel: string;
-}
-
-interface DecodedBody {
-  inArguments: InputParamenter[];
-}
-
 interface RequestBody {
   cellularNumber: number;
   channel: string;
+  dataExtension: string;
 }
+
 interface ResponseBody {
   responseCode: number;
   responseMessage: string;
@@ -70,138 +60,93 @@ interface ResponseBody {
     description: string;
   }[];
 }
+
 const execute = async function (req: Request, res: Response) {
-  const { body } = req;
-  console.log('Request Body:', body);
-  // const { env: { JWT_SECRET } } = process;
+  try {
+    const { body } = req;
+    console.log('Request Body:', body);
 
-  console.log('1Cellular Number:', body.cellularNumber);
-  console.log('1Data Extension:', body.dataExtension);
-  console.log('1Channel:', body.channel);
+    // const cellularNumber = 1121806490;
+    // const channel = "PDC";
+    // const dataExtension = "TestCA";
 
-  // if (!body) {
-  //   console.error(new Error('invalid jwtdata'));
-  //   return res.status(401).end();
-  // }
-  // if (!JWT_SECRET) {
-  //   console.error(new Error('jwtSecret not provided'));
-  //   return res.status(401).end();
-  // }
-  if (!body.dataExtension || !body.channel || !body.cellularNumber) {
-    console.error(new Error('Missing input parameters'));
-    return res.status(400).send('Missing input parameters');
-  }
+    const dataExtension = body.dataExtension;
+    const channel = body.channel;
+    const cellularNumber = body.cellularNumber; 
 
-  // verify(
-  body.toString('utf8'),
-    // JWT_SECRET,
-    // { algorithms: ['HS256'], complete: false },
-    async (err: any, decoded?: any) => {
-      if (err) {
-        console.error(err);
-        return res.status(401).end();
-      }
-      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
 
-        const now = new Date();
+    console.log('Cellular Number:', cellularNumber);
+    console.log('Data Extension:', dataExtension);
+    console.log('Channel:', channel);
 
-        let ValidationFailed = false;
-
-        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-
-        // let response;
-
-        if (!ValidationFailed) {
-          const {
-            API_URL,
-            API_SESSION_ID,
-            API_COUNTRY
-          } = process.env;
-
-          let dataExtension: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.dataExtension) {
-              dataExtension = argument.dataExtension;
-              break;
-            }
-          }
-          let channel: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.channel) {
-              channel = argument.channel;
-              break;
-            }
-          }
-
-          if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
-
-          console.log('LLamando a la API..');
-
-          console.log('2Cellular Number:', body.cellularNumber);
-          console.log('2Data Extension:', dataExtension);
-          console.log('2Channel:', channel);
-
-          const packRenovableApiResponse: { data: RequestBody } | null = await axios({
-            method: 'post',
-            url: API_URL,
-            data: {
-              cellularNumber: body.cellularNumber,
-              channel: body.channel
-            } as RequestBody,
-            headers: {
-              Country: API_COUNTRY!,
-              'Session-Id': API_SESSION_ID!
-            },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Response');
-              console.log(res.data);
-              return res.data;
-            })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
-            });
-          if (!packRenovableApiResponse) ValidationFailed = true;
-          // else response = packRenovableApiResponse.data;
-        }
-
-        res.status(200).send({
-          // response,
-          ValidationFailed,
-        });
-      } else {
-        console.error('inArguments invalid.');
-        return res.status(400).end();
-      }
+    if (!dataExtension || !channel || !cellularNumber) {
+      console.error(new Error('Missing input parameters'));
+      return res.status(400).send('Missing input parameters');
     }
-};
 
+    const now = Date.now();
+    const offersRequestDurationTimestamps = { start: now, end: null as null | number };
+
+    const {
+      API_URL,
+      API_SESSION_ID,
+      API_COUNTRY
+    } = process.env;
+
+    console.log('Llamando a la API...');
+    const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
+      method: 'post',
+      url: API_URL!,
+      data: {
+        cellularNumber: cellularNumber,
+        channel: channel
+      } as RequestBody,
+      headers: {
+        Country: API_COUNTRY!,
+        'Session-Id': API_SESSION_ID!
+      },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    });
+
+    offersRequestDurationTimestamps.end = Date.now();
+
+    if (packRenovableApiResponse) {
+      console.log('Respuesta de API:', packRenovableApiResponse.data);
+      return res.status(200).json(packRenovableApiResponse.data);
+    } else {
+
+      console.error('Sin respuesta de la API');
+      return res.status(500).send('Error obteniendo respuesta de la API');
+    }
+  } catch (error) {
+    console.error('Error en la ejecución:', error);
+    return res.status(500).send('Error en la ejecución');
+  }
+};
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Edit');
+  res.status(200).send('Edit');
 };
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Save');
+  res.status(200).send('Save'); 
 };
 
 const publish = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Publish');
+  res.status(200).send('Publish');
 };
 
 const validate = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Validate');
+  res.status(200).send('Validate');
 };
 
 const stop = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Stop');
+  res.status(200).send('Stop');
 };
 
 export default {
@@ -213,5 +158,3 @@ export default {
   validate,
   stop,
 };
-
-
