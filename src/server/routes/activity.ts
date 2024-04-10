@@ -1,8 +1,6 @@
 import https from 'https';
 import axios from 'axios';
-import { Request } from 'express';
-import { Response } from 'express';
-import { verify } from 'jsonwebtoken';
+import { Request, Response } from 'express';
 
 const logExecuteData: {
   body: any;
@@ -26,7 +24,7 @@ const logExecuteData: {
 
 const saveData = (req: any) => {
   // Put data from the request in an array accessible to the main app.
-  exports.logExecuteData.push({
+  logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -38,7 +36,7 @@ const saveData = (req: any) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.host,
+    host: req.hostname,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -47,18 +45,10 @@ const saveData = (req: any) => {
   });
 }
 
-interface InputParamenter {
-  dataExtension?: string;
-  channel?: string;
-}
-
-interface DecodedBody {
-  inArguments?: InputParamenter[];
-}
-
 interface RequestBody {
   cellularNumber: number;
   channel: string;
+  dataExtension: string;
 }
 
 interface ResponseBody {
@@ -70,7 +60,6 @@ interface ResponseBody {
     description: string;
   }[];
 }
-
 const execute = async function (req: Request, res: Response) {
   // const { body } = req;
   // const { env: { JWT_SECRET } } = process;
@@ -182,31 +171,31 @@ const execute = async function (req: Request, res: Response) {
   //     console.error('Error en la ejecución:', error);
   //     return res.status(500).send('Error en la ejecución');
   //   }
-}
+};
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Edit');
+  res.status(200).send('Edit');
 };
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Save');
+  res.status(200).send('Save'); 
 };
 
 const publish = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Publish');
+  res.status(200).send('Publish');
 };
 
 const validate = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Validate');
+  res.status(200).send('Validate');
 };
 
 const stop = (req: any, res: any) => {
   saveData(req);
-  res.send(200, 'Stop');
+  res.status(200).send('Stop');
 };
 
 export default {
