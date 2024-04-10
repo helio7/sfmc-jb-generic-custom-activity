@@ -64,112 +64,112 @@ interface RequestBody {
 
 const execute = async function (req: Request, res: Response) {
 try{
-  const { body } = req;
-  const { env: { JWT_SECRET } } = process;
+  // const { body } = req;
+  // const { env: { JWT_SECRET } } = process;
 
-  console.log('1Cellular Number:', body.cellularNumber);
-  console.log('1Data Extension:', body.dataExtension);
-  console.log('1Channel:', body.channel);
+  // console.log('1Cellular Number:', body.cellularNumber);
+  // console.log('1Data Extension:', body.dataExtension);
+  // console.log('1Channel:', body.channel);
 
-  if (!body) {
-    console.error(new Error('invalid jwtdata'));
-    return res.status(401).end();
-  }
-  if (!JWT_SECRET) {
-    console.error(new Error('jwtSecret not provided'));
-    return res.status(401).end();
-  }
+  // if (!body) {
+  //   console.error(new Error('invalid jwtdata'));
+  //   return res.status(401).end();
+  // }
+  // if (!JWT_SECRET) {
+  //   console.error(new Error('jwtSecret not provided'));
+  //   return res.status(401).end();
+  // }
 
-  verify(
-    body.toString('utf8'),
-    JWT_SECRET,
-    { algorithms: ['HS256'], complete: false },
-    async (err: any, decoded?: any) => {
-      if (err) {
-        console.error(err);
-        return res.status(401).end();
-      }
-      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
+  // verify(
+  //   body.toString('utf8'),
+  //   JWT_SECRET,
+  //   { algorithms: ['HS256'], complete: false },
+  //   async (err: any, decoded?: any) => {
+  //     if (err) {
+  //       console.error(err);
+  //       return res.status(401).end();
+  //     }
+  //     if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
 
-        const now = new Date();
+  //       const now = new Date();
 
-        let ValidationFailed = false;
+  //       let ValidationFailed = false;
 
-        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+  //       const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        let response;
+  //       let response;
 
-        const {
-            API_URL,
-            API_SESSION_ID,
-            API_COUNTRY
-          } = process.env;
+  //       const {
+  //           API_URL,
+  //           API_SESSION_ID,
+  //           API_COUNTRY
+  //         } = process.env;
   
-        // if (!ValidationFailed) {
-          let dataExtension: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.dataExtension) {
-                dataExtension = argument.dataExtension;
-              break;
-            }  
-          }
-          let channel: string | null = null;
-          for (const argument of decoded.inArguments) {
-            if (argument.channel) {
-                channel = argument.channel;
-              break;
-            }  
-          }
+  //       // if (!ValidationFailed) {
+  //         let dataExtension: string | null = null;
+  //         for (const argument of decoded.inArguments) {
+  //           if (argument.dataExtension) {
+  //               dataExtension = argument.dataExtension;
+  //             break;
+  //           }  
+  //         }
+  //         let channel: string | null = null;
+  //         for (const argument of decoded.inArguments) {
+  //           if (argument.channel) {
+  //               channel = argument.channel;
+  //             break;
+  //           }  
+  //         }
 
-          if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
+  //         if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
-          console.log('LLamando a la API..');
+  //         console.log('LLamando a la API..');
 
-          console.log('2Cellular Number:', body.cellularNumber);
-          console.log('2Data Extension:', dataExtension);
-          console.log('2Channel:', channel);
+  //         console.log('2Cellular Number:', body.cellularNumber);
+  //         console.log('2Data Extension:', dataExtension);
+  //         console.log('2Channel:', channel);
 
-          const packRenovableApiResponse : { data: RequestBody } | null = await axios({
-            method: 'post',
-            url: API_URL,
-            data: {
-              cellularNumber: body.cellularNumber,
-              channel: body.channel
-            } as RequestBody,
-            headers: {
-              Country: API_COUNTRY!,
-              'Session-Id': API_SESSION_ID!
-            },
-            httpsAgent,
-          })
-            .then((res: any) => {
-              console.log('Response');
-              console.log(res.data);
-              return res.data;
-            })
-            .catch((err: any) => {
-              console.log('Error:');
-              console.log(err);
-            });
-            if (packRenovableApiResponse) {
-                console.log('Respuesta de API:', packRenovableApiResponse.data);
-                return res.status(200).json(packRenovableApiResponse.data);
-              } else {
-                console.error('Sin respuesta de la API');
-                return res.status(500).send('Error obteniendo respuesta de la API');
-              }
-        // }
+  //         const packRenovableApiResponse : { data: RequestBody } | null = await axios({
+  //           method: 'post',
+  //           url: API_URL,
+  //           data: {
+  //             cellularNumber: body.cellularNumber,
+  //             channel: body.channel
+  //           } as RequestBody,
+  //           headers: {
+  //             Country: API_COUNTRY!,
+  //             'Session-Id': API_SESSION_ID!
+  //           },
+  //           httpsAgent,
+  //         })
+  //           .then((res: any) => {
+  //             console.log('Response');
+  //             console.log(res.data);
+  //             return res.data;
+  //           })
+  //           .catch((err: any) => {
+  //             console.log('Error:');
+  //             console.log(err);
+  //           });
+  //           if (packRenovableApiResponse) {
+  //               console.log('Respuesta de API:', packRenovableApiResponse.data);
+  //               return res.status(200).json(packRenovableApiResponse.data);
+  //             } else {
+  //               console.error('Sin respuesta de la API');
+  //               return res.status(500).send('Error obteniendo respuesta de la API');
+  //             }
+  //       // }
   
-        res.status(200).send({
-            response,
-          ValidationFailed,
-        });
-      } else {
-        console.error('inArguments invalid.');
-        return res.status(400).end();
-      }
-    },
-  );
+  //       res.status(200).send({
+  //           response,
+  //         ValidationFailed,
+  //       });
+  //     } else {
+  //       console.error('inArguments invalid.');
+  //       return res.status(400).end();
+  //     }
+  //   },
+  // );
 } catch (error) {
     console.error('Error en la ejecución:', error);
     return res.status(500).send('Error en la ejecución');
