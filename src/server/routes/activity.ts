@@ -27,7 +27,7 @@ const logExecuteData: {
 
 const saveData = (req: any) => {
   // Put data from the request in an array accessible to the main app.
-  exports.logExecuteData.push({
+  logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -60,6 +60,16 @@ interface DecodedBody {
 interface RequestBody {
     cellularNumber: number;
     channel: string;
+  }
+
+  interface ResponseBody {
+    responseCode: number;
+    responseMessage: string;
+    handle: number;
+    pack: {
+      packId: string;
+      description: string;
+    }[];
   }
 
 const execute = async function (req: Request, res: Response) {
@@ -166,8 +176,8 @@ const execute = async function (req: Request, res: Response) {
   //   },
   // );
   } catch (error) {
-    console.error('Error en la ejecución:', error);
-    return res.status(500).send('Error en la ejecución');
+    // console.error('Error en la ejecución:', error);
+    // return res.status(500).send('Error en la ejecución');
   }
 };
 
