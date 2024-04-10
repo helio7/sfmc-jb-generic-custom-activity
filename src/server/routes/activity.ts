@@ -63,7 +63,6 @@ interface RequestBody {
   }
 
 const execute = async function (req: Request, res: Response) {
-try{
   // const { body } = req;
   // const { env: { JWT_SECRET } } = process;
 
@@ -170,10 +169,10 @@ try{
   //     }
   //   },
   // );
-} catch (error) {
-    console.error('Error en la ejecución:', error);
-    return res.status(500).send('Error en la ejecución');
-  }
+// } catch (error) {
+//     console.error('Error en la ejecución:', error);
+//     return res.status(500).send('Error en la ejecución');
+//   }
 }
 
 const edit = (req: any, res: any) => {
