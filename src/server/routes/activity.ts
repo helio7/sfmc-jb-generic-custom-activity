@@ -78,10 +78,6 @@ const execute = async function (req: Request, res: Response) {
   const { body } = req;
   const { env: { JWT_SECRET } } = process;
 
-  console.log('1Cellular Number:', body.cellularNumber);
-  console.log('1Data Extension:', body.dataExtension);
-  console.log('1Channel:', body.channel);
-
   if (!body) {
     console.error(new Error('invalid jwtdata'));
     return res.status(401).end();
@@ -139,9 +135,9 @@ const execute = async function (req: Request, res: Response) {
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
 
-          console.log('2Cellular Number:', cellularNumber);
-          console.log('2Data Extension:', dataExtension);
-          console.log('2Channel:', channel);
+          console.log('Cellular Number:', cellularNumber);
+          console.log('Data Extension:', dataExtension);
+          console.log('Channel:', channel);
 
           console.log('LLamando a la API..');
 
@@ -162,6 +158,7 @@ const execute = async function (req: Request, res: Response) {
             .then((res: any) => {
               console.log('Response');
               console.log(res.data);
+              response = res.data
               return res.data;
             })
             .catch((err: any) => {
@@ -169,10 +166,11 @@ const execute = async function (req: Request, res: Response) {
               console.log(err);
             });
           if (!packRenovableApiResponse) ValidationFailed = true;
-          else response = packRenovableApiResponse.data;
+          // else response = packRenovableApiResponse.data;
+          console.log(response);
         }  
         res.status(200).send({
-            response,
+          response,
           ValidationFailed,
         });
       } else {
