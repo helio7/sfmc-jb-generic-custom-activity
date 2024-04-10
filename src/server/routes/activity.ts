@@ -1,4 +1,3 @@
-'use strict';
 import https from 'https';
 import axios from 'axios';
 import { Request } from 'express';
@@ -49,18 +48,28 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-    dataExtension?: string;
-    channel?: string;
-  }
+  dataExtension?: string;
+  channel?: string;
+}
 
 interface DecodedBody {
   inArguments?: InputParamenter[];
 }
 
 interface RequestBody {
-    cellularNumber: number;
-    channel: string;
-  }
+  cellularNumber: number;
+  channel: string;
+}
+
+interface ResponseBody {
+  responseCode: number;
+  responseMessage: string;
+  handle: number;
+  pack: {
+    packId: string;
+    description: string;
+  }[];
+}
 
 const execute = async function (req: Request, res: Response) {
   // const { body } = req;
@@ -103,7 +112,7 @@ const execute = async function (req: Request, res: Response) {
   //           API_SESSION_ID,
   //           API_COUNTRY
   //         } = process.env;
-  
+
   //       // if (!ValidationFailed) {
   //         let dataExtension: string | null = null;
   //         for (const argument of decoded.inArguments) {
@@ -121,7 +130,7 @@ const execute = async function (req: Request, res: Response) {
   //         }
 
   //         if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
-  
+
   //         console.log('LLamando a la API..');
 
   //         console.log('2Cellular Number:', body.cellularNumber);
@@ -158,7 +167,7 @@ const execute = async function (req: Request, res: Response) {
   //               return res.status(500).send('Error obteniendo respuesta de la API');
   //             }
   //       // }
-  
+
   //       res.status(200).send({
   //           response,
   //         ValidationFailed,
@@ -169,10 +178,10 @@ const execute = async function (req: Request, res: Response) {
   //     }
   //   },
   // );
-// } catch (error) {
-//     console.error('Error en la ejecución:', error);
-//     return res.status(500).send('Error en la ejecución');
-//   }
+  // } catch (error) {
+  //     console.error('Error en la ejecución:', error);
+  //     return res.status(500).send('Error en la ejecución');
+  //   }
 }
 
 const edit = (req: any, res: any) => {
@@ -195,7 +204,7 @@ const validate = (req: any, res: any) => {
   res.send(200, 'Validate');
 };
 
-const stop = (req: any, res: any) => {  
+const stop = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Stop');
 };
