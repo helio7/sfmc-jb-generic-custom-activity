@@ -132,35 +132,38 @@ const execute = async function (req: Request, res: Response) {
   
           console.log('LLamando a la API..');
 
-  //         console.log('2Cellular Number:', body.cellularNumber);
-  //         console.log('2Data Extension:', dataExtension);
-  //         console.log('2Channel:', channel);
+          //---
+          console.log('2Cellular Number:', body.cellularNumber);
+          console.log('2Data Extension:', dataExtension);
+          console.log('2Channel:', channel);
 
-  //         const packRenovableApiResponse : { data: RequestBody } | null = await axios({
-  //           method: 'post',
-  //           url: API_URL,
-  //           data: {
-  //             cellularNumber: body.cellularNumber,
-  //             channel: body.channel
-  //           } as RequestBody,
-  //           headers: {
-  //             Country: API_COUNTRY!,
-  //             'Session-Id': API_SESSION_ID!
-  //           },
-  //           httpsAgent,
-  //         })
-  //           .then((res: any) => {
-  //             console.log('Response');
-  //             console.log(res.data);
-  //             return res.data;
-  //           })
-  //           .catch((err: any) => {
-  //             console.log('Error:');
-  //             console.log(err);
-  //           });
-  //         if (!packRenovableApiResponse) ValidationFailed = true;
-  //         else response = packRenovableApiResponse.data;
+          const packRenovableApiResponse : { data: RequestBody } | null = await axios({
+            method: 'post',
+            url: API_URL,
+            data: {
+              cellularNumber: body.cellularNumber,
+              channel: body.channel
+            } as RequestBody,
+            headers: {
+              Country: API_COUNTRY!,
+              'Session-Id': API_SESSION_ID!
+            },
+            httpsAgent,
+          })
+            .then((res: any) => {
+              console.log('Response');
+              console.log(res.data);
+              return res.data;
+            })
+            .catch((err: any) => {
+              console.log('Error:');
+              console.log(err);
+            });
+          if (!packRenovableApiResponse) ValidationFailed = true;
+          else response = packRenovableApiResponse.data;
         }
+
+        //----
   
   //       res.status(200).send({
   //           response,
