@@ -90,17 +90,16 @@ const execute = async function (req: Request, res: Response) {
     return res.status(401).end();
   }
 
-  // verify(
-  //   body.toString('utf8'),
-  //   JWT_SECRET,
-  //   { algorithms: ['HS256'], complete: false },
-  //   async (err: any, decoded?: any) => {
-  //     if (err) {
-  //       console.error(err);
-  //       return res.status(401).end();
-  //     }
-  //     if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-
+  verify(
+    body.toString('utf8'),
+    JWT_SECRET,
+    { algorithms: ['HS256'], complete: false },
+    async (err: any, decoded?: any) => {
+      if (err) {
+        console.error(err);
+        return res.status(401).end();
+      }
+      if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
   //       const now = new Date();
 
   //       let ValidationFailed = false;
@@ -172,9 +171,9 @@ const execute = async function (req: Request, res: Response) {
   //     } else {
   //       console.error('inArguments invalid.');
   //       return res.status(400).end();
-  //     }
-  //   },
-  // );
+      }
+    },
+  );
   } catch (error) {
     // console.error('Error en la ejecución:', error);
     // return res.status(500).send('Error en la ejecución');
