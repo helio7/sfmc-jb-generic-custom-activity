@@ -127,6 +127,13 @@ const execute = async function (req: Request, res: Response) {
               break;
             }  
           }
+          let cellularNumber: number | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.cellularNumber) {
+              cellularNumber = argument.cellularNumber;
+              break;
+            }  
+          }
 
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
