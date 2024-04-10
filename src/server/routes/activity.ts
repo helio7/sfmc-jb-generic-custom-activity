@@ -51,6 +51,7 @@ const saveData = (req: any) => {
 interface InputParamenter {
     dataExtension?: string;
     channel?: string;
+    cellularNumber?: number;
   }
 
 interface DecodedBody {
@@ -138,7 +139,7 @@ const execute = async function (req: Request, res: Response) {
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
 
-          console.log('2Cellular Number:', body.cellularNumber);
+          console.log('2Cellular Number:', cellularNumber);
           console.log('2Data Extension:', dataExtension);
           console.log('2Channel:', channel);
 
