@@ -74,21 +74,21 @@ interface RequestBody {
 
 const execute = async function (req: Request, res: Response) {
   try{
-  // const { body } = req;
-  // const { env: { JWT_SECRET } } = process;
+  const { body } = req;
+  const { env: { JWT_SECRET } } = process;
 
-  // console.log('1Cellular Number:', body.cellularNumber);
-  // console.log('1Data Extension:', body.dataExtension);
-  // console.log('1Channel:', body.channel);
+  console.log('1Cellular Number:', body.cellularNumber);
+  console.log('1Data Extension:', body.dataExtension);
+  console.log('1Channel:', body.channel);
 
-  // if (!body) {
-  //   console.error(new Error('invalid jwtdata'));
-  //   return res.status(401).end();
-  // }
-  // if (!JWT_SECRET) {
-  //   console.error(new Error('jwtSecret not provided'));
-  //   return res.status(401).end();
-  // }
+  if (!body) {
+    console.error(new Error('invalid jwtdata'));
+    return res.status(401).end();
+  }
+  if (!JWT_SECRET) {
+    console.error(new Error('jwtSecret not provided'));
+    return res.status(401).end();
+  }
 
   // verify(
   //   body.toString('utf8'),
