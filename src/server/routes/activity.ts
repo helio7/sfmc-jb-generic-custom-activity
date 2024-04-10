@@ -100,20 +100,18 @@ const execute = async function (req: Request, res: Response) {
         return res.status(401).end();
       }
       if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-  //       const now = new Date();
 
-  //       let ValidationFailed = false;
-
-  //       const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-
-  //       let response;
+        const now = new Date();
+        let ValidationFailed = false;
+        const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+        let response;
   
-  //       if (!ValidationFailed) {
-  //           const {
-  //               API_URL,
-  //               API_SESSION_ID,
-  //               API_COUNTRY
-  //             } = process.env;
+        if (!ValidationFailed) {
+            const {
+                API_URL,
+                API_SESSION_ID,
+                API_COUNTRY
+              } = process.env;
   
   //         let dataExtension: string | null = null;
   //         for (const argument of decoded.inArguments) {
@@ -162,7 +160,7 @@ const execute = async function (req: Request, res: Response) {
   //           });
   //         if (!packRenovableApiResponse) ValidationFailed = true;
   //         else response = packRenovableApiResponse.data;
-  //       }
+        }
   
   //       res.status(200).send({
   //           response,
