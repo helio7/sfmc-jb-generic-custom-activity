@@ -49,18 +49,18 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-    dataExtension?: string;
-    channel?: string;
-  }
+  dataExtension?: string;
+  channel?: string;
+}
 
 interface DecodedBody {
   inArguments?: InputParamenter[];
 }
 
 interface RequestBody {
-    cellularNumber: number;
-    channel: string;
-  }
+  cellularNumber: number;
+  channel: string;
+}
 
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
@@ -79,8 +79,8 @@ const execute = async function (req: Request, res: Response) {
   //   return res.status(401).end();
   // }
 
-  verify(
-    body.toString('utf8'),
+  // verify(
+  body.toString('utf8'),
     // JWT_SECRET,
     // { algorithms: ['HS256'], complete: false },
     async (err: any, decoded?: any) => {
@@ -97,38 +97,38 @@ const execute = async function (req: Request, res: Response) {
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
         let response;
-  
+
         if (!ValidationFailed) {
-            const {
-                API_URL,
-                API_SESSION_ID,
-                API_COUNTRY
-              } = process.env;
-  
+          const {
+            API_URL,
+            API_SESSION_ID,
+            API_COUNTRY
+          } = process.env;
+
           let dataExtension: string | null = null;
           for (const argument of decoded.inArguments) {
             if (argument.dataExtension) {
-                dataExtension = argument.dataExtension;
+              dataExtension = argument.dataExtension;
               break;
-            }  
+            }
           }
           let channel: string | null = null;
           for (const argument of decoded.inArguments) {
             if (argument.channel) {
-                channel = argument.channel;
+              channel = argument.channel;
               break;
-            }  
+            }
           }
 
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
-  
+
           console.log('LLamando a la API..');
 
           console.log('2Cellular Number:', body.cellularNumber);
           console.log('2Data Extension:', dataExtension);
           console.log('2Channel:', channel);
 
-          const packRenovableApiResponse : { data: RequestBody } | null = await axios({
+          const packRenovableApiResponse: { data: RequestBody } | null = await axios({
             method: 'post',
             url: API_URL,
             data: {
@@ -153,18 +153,18 @@ const execute = async function (req: Request, res: Response) {
           if (!packRenovableApiResponse) ValidationFailed = true;
           else response = packRenovableApiResponse.data;
         }
-  
+
         res.status(200).send({
-            response,
+          response,
           ValidationFailed,
         });
       } else {
         console.error('inArguments invalid.');
         return res.status(400).end();
       }
-    },
-  );
+    }
 };
+
 
 const edit = (req: any, res: any) => {
   saveData(req);
@@ -186,7 +186,7 @@ const validate = (req: any, res: any) => {
   res.send(200, 'Validate');
 };
 
-const stop = (req: any, res: any) => {  
+const stop = (req: any, res: any) => {
   saveData(req);
   res.send(200, 'Stop');
 };
@@ -200,3 +200,5 @@ export default {
   validate,
   stop,
 };
+
+
