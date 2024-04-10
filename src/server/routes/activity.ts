@@ -66,13 +66,13 @@ const execute = async function (req: Request, res: Response) {
     const { body } = req;
     console.log('Request Body:', body);
 
-    // const cellularNumber = 1121806490;
-    // const channel = "PDC";
-    // const dataExtension = "TestCA";
+    const cellularNumber = 1121806490;
+    const channel = "PDC";
+    const dataExtension = "TestCA";
 
-    const dataExtension = body.dataExtension;
-    const channel = body.channel;
-    const cellularNumber = body.cellularNumber; 
+    // const dataExtension = body.dataExtension;
+    // const channel = body.channel;
+    // const cellularNumber = body.cellularNumber; 
 
 
     console.log('Cellular Number:', cellularNumber);
