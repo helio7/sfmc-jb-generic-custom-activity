@@ -27,7 +27,7 @@ const logExecuteData: {
 
 const saveData = (req: any) => {
   // Put data from the request in an array accessible to the main app.
-  logExecuteData.push({
+  exports.logExecuteData.push({
     body: req.body,
     headers: req.headers,
     trailers: req.trailers,
@@ -39,7 +39,7 @@ const saveData = (req: any) => {
     cookies: req.cookies,
     ip: req.ip,
     path: req.path,
-    host: req.hostname,
+    host: req.host,
     fresh: req.fresh,
     stale: req.stale,
     protocol: req.protocol,
@@ -48,109 +48,152 @@ const saveData = (req: any) => {
   });
 }
 
-interface RequestBody {
-  cellularNumber: number;
-  channel: string;
-  dataExtension: string;
+interface InputParamenter {
+    dataExtension?: string;
+    channel?: string;
+  }
+
+interface DecodedBody {
+  inArguments?: InputParamenter[];
 }
 
-interface ResponseBody {
-  responseCode: number;
-  responseMessage: string;
-  handle: number;
-  pack: {
-    packId: string;
-    description: string;
-  }[];
-}
+interface RequestBody {
+    cellularNumber: number;
+    channel: string;
+  }
 
 const execute = async function (req: Request, res: Response) {
-  try {
-    //     const { body } = req;
-    //     console.log('Request Body:', body);
+  try{
+  // const { body } = req;
+  // const { env: { JWT_SECRET } } = process;
 
-    //     // const cellularNumber = 1121806490;
-    //     // const channel = "PDC";
-    //     // const dataExtension = "TestCA";
+  // console.log('1Cellular Number:', body.cellularNumber);
+  // console.log('1Data Extension:', body.dataExtension);
+  // console.log('1Channel:', body.channel);
 
-    //     const dataExtension = body.dataExtension;
-    //     const channel = body.channel;
-    //     const cellularNumber = body.cellularNumber; 
+  // if (!body) {
+  //   console.error(new Error('invalid jwtdata'));
+  //   return res.status(401).end();
+  // }
+  // if (!JWT_SECRET) {
+  //   console.error(new Error('jwtSecret not provided'));
+  //   return res.status(401).end();
+  // }
 
+  // verify(
+  //   body.toString('utf8'),
+  //   JWT_SECRET,
+  //   { algorithms: ['HS256'], complete: false },
+  //   async (err: any, decoded?: any) => {
+  //     if (err) {
+  //       console.error(err);
+  //       return res.status(401).end();
+  //     }
+  //     if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
 
-    //     console.log('Cellular Number:', cellularNumber);
-    //     console.log('Data Extension:', dataExtension);
-    //     console.log('Channel:', channel);
+  //       const now = new Date();
 
-    //     if (!dataExtension || !channel || !cellularNumber) {
-    //       console.error(new Error('Missing input parameters'));
-    //       return res.status(400).send('Missing input parameters');
-    //     }
+  //       let ValidationFailed = false;
 
-    //     const now = Date.now();
-    //     const offersRequestDurationTimestamps = { start: now, end: null as null | number };
+  //       const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-    //     const {
-    //       API_URL,
-    //       API_SESSION_ID,
-    //       API_COUNTRY
-    //     } = process.env;
+  //       let response;
+  
+  //       if (!ValidationFailed) {
+  //           const {
+  //               API_URL,
+  //               API_SESSION_ID,
+  //               API_COUNTRY
+  //             } = process.env;
+  
+  //         let dataExtension: string | null = null;
+  //         for (const argument of decoded.inArguments) {
+  //           if (argument.dataExtension) {
+  //               dataExtension = argument.dataExtension;
+  //             break;
+  //           }  
+  //         }
+  //         let channel: string | null = null;
+  //         for (const argument of decoded.inArguments) {
+  //           if (argument.channel) {
+  //               channel = argument.channel;
+  //             break;
+  //           }  
+  //         }
 
-    //     console.log('Llamando a la API...');
-    //     const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-    //       method: 'post',
-    //       url: API_URL!,
-    //       data: {
-    //         cellularNumber: cellularNumber,
-    //         channel: channel
-    //       } as RequestBody,
-    //       headers: {
-    //         Country: API_COUNTRY!,
-    //         'Session-Id': API_SESSION_ID!
-    //       },
-    //       httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    //     });
+  //         if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
+  
+  //         console.log('LLamando a la API..');
 
-    //     offersRequestDurationTimestamps.end = Date.now();
+  //         console.log('2Cellular Number:', body.cellularNumber);
+  //         console.log('2Data Extension:', dataExtension);
+  //         console.log('2Channel:', channel);
 
-    //     if (packRenovableApiResponse) {
-    //       console.log('Respuesta de API:', packRenovableApiResponse.data);
-    //       return res.status(200).json(packRenovableApiResponse.data);
-    //     } else {
-
-    //       console.error('Sin respuesta de la API');
-    //       return res.status(500).send('Error obteniendo respuesta de la API');
-    //     }
-    //   }
+  //         const packRenovableApiResponse : { data: RequestBody } | null = await axios({
+  //           method: 'post',
+  //           url: API_URL,
+  //           data: {
+  //             cellularNumber: body.cellularNumber,
+  //             channel: body.channel
+  //           } as RequestBody,
+  //           headers: {
+  //             Country: API_COUNTRY!,
+  //             'Session-Id': API_SESSION_ID!
+  //           },
+  //           httpsAgent,
+  //         })
+  //           .then((res: any) => {
+  //             console.log('Response');
+  //             console.log(res.data);
+  //             return res.data;
+  //           })
+  //           .catch((err: any) => {
+  //             console.log('Error:');
+  //             console.log(err);
+  //           });
+  //         if (!packRenovableApiResponse) ValidationFailed = true;
+  //         else response = packRenovableApiResponse.data;
+  //       }
+  
+  //       res.status(200).send({
+  //           response,
+  //         ValidationFailed,
+  //       });
+  //     } else {
+  //       console.error('inArguments invalid.');
+  //       return res.status(400).end();
+  //     }
+  //   },
+  // );
   } catch (error) {
-    //     console.error('Error en la ejecución:', error);
-    //     return res.status(500).send('Error en la ejecución');
+    console.error('Error en la ejecución:', error);
+    return res.status(500).send('Error en la ejecución');
   }
 };
 
 const edit = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Edit');
+  res.send(200, 'Edit');
 };
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Save');
+  res.send(200, 'Save');
 };
 
 const publish = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Publish');
+  res.send(200, 'Publish');
 };
 
 const validate = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Validate');
+  res.send(200, 'Validate');
 };
 
-const stop = (req: any, res: any) => {
+const stop = (req: any, res: any) => {  
   saveData(req);
-  res.status(200).send('Stop');
+  res.send(200, 'Stop');
 };
 
 export default {
