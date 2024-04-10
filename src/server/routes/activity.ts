@@ -130,12 +130,13 @@ const execute = async function (req: Request, res: Response) {
 
           if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
-          console.log('LLamando a la API..');
 
-          //---
           console.log('2Cellular Number:', body.cellularNumber);
           console.log('2Data Extension:', dataExtension);
           console.log('2Channel:', channel);
+
+          console.log('LLamando a la API..');
+
 
           const packRenovableApiResponse : { data: RequestBody } | null = await axios({
             method: 'post',
@@ -161,23 +162,20 @@ const execute = async function (req: Request, res: Response) {
             });
           if (!packRenovableApiResponse) ValidationFailed = true;
           else response = packRenovableApiResponse.data;
-        }
-
-        //----
-  
-  //       res.status(200).send({
-  //           response,
-  //         ValidationFailed,
-  //       });
-  //     } else {
-  //       console.error('inArguments invalid.');
-  //       return res.status(400).end();
+        }  
+        res.status(200).send({
+            response,
+          ValidationFailed,
+        });
+      } else {
+        console.error('inArguments invalid.');
+        return res.status(400).end();
       }
     },
   );
   } catch (error) {
-    // console.error('Error en la ejecución:', error);
-    // return res.status(500).send('Error en la ejecución');
+    console.error('Error en la ejecución:', error);
+    return res.status(500).send('Error en la ejecución');
   }
 };
 
