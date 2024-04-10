@@ -1,6 +1,9 @@
+'use strict';
 import https from 'https';
 import axios from 'axios';
-import { Request, Response } from 'express';
+import { Request } from 'express';
+import { Response } from 'express';
+import { verify } from 'jsonwebtoken';
 
 const logExecuteData: {
   body: any;
@@ -62,66 +65,67 @@ interface ResponseBody {
 }
 
 const execute = async function (req: Request, res: Response) {
-//   try {
-//     const { body } = req;
-//     console.log('Request Body:', body);
+  try {
+    //     const { body } = req;
+    //     console.log('Request Body:', body);
 
-//     // const cellularNumber = 1121806490;
-//     // const channel = "PDC";
-//     // const dataExtension = "TestCA";
+    //     // const cellularNumber = 1121806490;
+    //     // const channel = "PDC";
+    //     // const dataExtension = "TestCA";
 
-//     const dataExtension = body.dataExtension;
-//     const channel = body.channel;
-//     const cellularNumber = body.cellularNumber; 
+    //     const dataExtension = body.dataExtension;
+    //     const channel = body.channel;
+    //     const cellularNumber = body.cellularNumber; 
 
 
-//     console.log('Cellular Number:', cellularNumber);
-//     console.log('Data Extension:', dataExtension);
-//     console.log('Channel:', channel);
+    //     console.log('Cellular Number:', cellularNumber);
+    //     console.log('Data Extension:', dataExtension);
+    //     console.log('Channel:', channel);
 
-//     if (!dataExtension || !channel || !cellularNumber) {
-//       console.error(new Error('Missing input parameters'));
-//       return res.status(400).send('Missing input parameters');
-//     }
+    //     if (!dataExtension || !channel || !cellularNumber) {
+    //       console.error(new Error('Missing input parameters'));
+    //       return res.status(400).send('Missing input parameters');
+    //     }
 
-//     const now = Date.now();
-//     const offersRequestDurationTimestamps = { start: now, end: null as null | number };
+    //     const now = Date.now();
+    //     const offersRequestDurationTimestamps = { start: now, end: null as null | number };
 
-//     const {
-//       API_URL,
-//       API_SESSION_ID,
-//       API_COUNTRY
-//     } = process.env;
+    //     const {
+    //       API_URL,
+    //       API_SESSION_ID,
+    //       API_COUNTRY
+    //     } = process.env;
 
-//     console.log('Llamando a la API...');
-//     const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
-//       method: 'post',
-//       url: API_URL!,
-//       data: {
-//         cellularNumber: cellularNumber,
-//         channel: channel
-//       } as RequestBody,
-//       headers: {
-//         Country: API_COUNTRY!,
-//         'Session-Id': API_SESSION_ID!
-//       },
-//       httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-//     });
+    //     console.log('Llamando a la API...');
+    //     const packRenovableApiResponse: { data: ResponseBody } | null = await axios({
+    //       method: 'post',
+    //       url: API_URL!,
+    //       data: {
+    //         cellularNumber: cellularNumber,
+    //         channel: channel
+    //       } as RequestBody,
+    //       headers: {
+    //         Country: API_COUNTRY!,
+    //         'Session-Id': API_SESSION_ID!
+    //       },
+    //       httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    //     });
 
-//     offersRequestDurationTimestamps.end = Date.now();
+    //     offersRequestDurationTimestamps.end = Date.now();
 
-//     if (packRenovableApiResponse) {
-//       console.log('Respuesta de API:', packRenovableApiResponse.data);
-//       return res.status(200).json(packRenovableApiResponse.data);
-//     } else {
+    //     if (packRenovableApiResponse) {
+    //       console.log('Respuesta de API:', packRenovableApiResponse.data);
+    //       return res.status(200).json(packRenovableApiResponse.data);
+    //     } else {
 
-//       console.error('Sin respuesta de la API');
-//       return res.status(500).send('Error obteniendo respuesta de la API');
-//     }
-//   } catch (error) {
-//     console.error('Error en la ejecución:', error);
-//     return res.status(500).send('Error en la ejecución');
-//   }
+    //       console.error('Sin respuesta de la API');
+    //       return res.status(500).send('Error obteniendo respuesta de la API');
+    //     }
+    //   }
+  } catch (error) {
+    //     console.error('Error en la ejecución:', error);
+    //     return res.status(500).send('Error en la ejecución');
+  }
 };
 
 const edit = (req: any, res: any) => {
@@ -131,7 +135,7 @@ const edit = (req: any, res: any) => {
 
 const save = (req: any, res: any) => {
   saveData(req);
-  res.status(200).send('Save'); 
+  res.status(200).send('Save');
 };
 
 const publish = (req: any, res: any) => {
