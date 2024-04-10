@@ -113,24 +113,24 @@ const execute = async function (req: Request, res: Response) {
                 API_COUNTRY
               } = process.env;
   
-  //         let dataExtension: string | null = null;
-  //         for (const argument of decoded.inArguments) {
-  //           if (argument.dataExtension) {
-  //               dataExtension = argument.dataExtension;
-  //             break;
-  //           }  
-  //         }
-  //         let channel: string | null = null;
-  //         for (const argument of decoded.inArguments) {
-  //           if (argument.channel) {
-  //               channel = argument.channel;
-  //             break;
-  //           }  
-  //         }
+          let dataExtension: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.dataExtension) {
+                dataExtension = argument.dataExtension;
+              break;
+            }  
+          }
+          let channel: string | null = null;
+          for (const argument of decoded.inArguments) {
+            if (argument.channel) {
+                channel = argument.channel;
+              break;
+            }  
+          }
 
-  //         if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
+          if (!dataExtension || !channel) return res.status(400).send('Input parameter is missing.');
   
-  //         console.log('LLamando a la API..');
+          console.log('LLamando a la API..');
 
   //         console.log('2Cellular Number:', body.cellularNumber);
   //         console.log('2Data Extension:', dataExtension);
