@@ -49,21 +49,30 @@ const saveData = (req: any) => {
 }
 
 interface InputParamenter {
-  dataExtension?: string;
-  channel?: string;
+  dataExtension: string;
+  channel: string;
 }
 
 interface DecodedBody {
-  inArguments?: InputParamenter[];
+  inArguments: InputParamenter[];
 }
 
 interface RequestBody {
   cellularNumber: number;
   channel: string;
 }
-
+interface ResponseBody {
+  responseCode: number;
+  responseMessage: string;
+  handle: number;
+  pack: {
+    packId: string;
+    description: string;
+  }[];
+}
 const execute = async function (req: Request, res: Response) {
   const { body } = req;
+  console.log('Request Body:', body);
   // const { env: { JWT_SECRET } } = process;
 
   console.log('1Cellular Number:', body.cellularNumber);
@@ -78,6 +87,10 @@ const execute = async function (req: Request, res: Response) {
   //   console.error(new Error('jwtSecret not provided'));
   //   return res.status(401).end();
   // }
+  if (!body.dataExtension || !body.channel || !body.cellularNumber) {
+    console.error(new Error('Missing input parameters'));
+    return res.status(400).send('Missing input parameters');
+  }
 
   // verify(
   body.toString('utf8'),
@@ -96,7 +109,7 @@ const execute = async function (req: Request, res: Response) {
 
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        let response;
+        // let response;
 
         if (!ValidationFailed) {
           const {
@@ -151,11 +164,11 @@ const execute = async function (req: Request, res: Response) {
               console.log(err);
             });
           if (!packRenovableApiResponse) ValidationFailed = true;
-          else response = packRenovableApiResponse.data;
+          // else response = packRenovableApiResponse.data;
         }
 
         res.status(200).send({
-          response,
+          // response,
           ValidationFailed,
         });
       } else {
