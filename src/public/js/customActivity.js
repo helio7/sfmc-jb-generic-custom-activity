@@ -33,6 +33,8 @@ define(['postmonger'], (Postmonger) => {
         const dataExtension = document.getElementById('dataExtension').value;
         const channel = document.getElementById('channel').value;
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
+        const packId = `{{Contact.Attribute."${dataExtension}".pack_${attributeKeyWord}_final}}`;
+
 
         console.log('Data Extension from UI:', dataExtension);
         console.log('Channel from UI:', channel);
