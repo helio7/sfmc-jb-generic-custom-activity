@@ -58,6 +58,9 @@ define(['postmonger'], (Postmonger) => {
         const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
         if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
 
+        const channelArg = inArguments.find(arg => arg.channel);
+        if (channelArg) document.getElementById('channel').value = channelArg.channel;
+
         const externalIdPrefixArg = inArguments.find(arg => arg.externalIdPrefix);
         if (externalIdPrefixArg) document.getElementById('externalIdPrefix').value = externalIdPrefixArg.externalIdPrefix;
     });
@@ -93,8 +96,7 @@ define(['postmonger'], (Postmonger) => {
         // let attributeKeyWord = DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE[packsType];
 
         const dataExtension = document.getElementById('dataExtension').value;
-
-        //ClusterPrepago
+        const channel = document.getElementById('channel').value;
 
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
         const balance = `{{Interaction.${saldoCustomActivityKey}.saldo}}`;
@@ -110,6 +112,7 @@ define(['postmonger'], (Postmonger) => {
 
         activity['arguments'].execute.inArguments = [
             { dataExtension: dataExtension ? dataExtension : null },
+            { channel: channel ? channel : null },
             { packsType: packsType ? packsType : null },
             { cellularNumber: cellularNumber ? cellularNumber : null },
             { balance: balance ? balance : null },

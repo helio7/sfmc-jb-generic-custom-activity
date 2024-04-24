@@ -52,6 +52,7 @@ const logData = (req: Request) => {
 
 interface InputParamenter {
     cellularNumber?: string;
+    dataExtension?: string;
 }
 interface DecodedBody {
     inArguments?: InputParamenter[];
@@ -61,84 +62,9 @@ interface DurationTimestampsPair {
     end: number | null;
 }
 
-interface RequestBody {
+interface PackRenovRequestBody {
     cellularNumber: number;
     channel: string;
-}
-
-interface PrestaRequestBody {
-    description: string;
-    externalId: string;
-    provideAlternative: boolean;
-    provideOnlyAvailable: boolean;
-    provideUnavailabilityReason: boolean;
-    relatedParty: { id: string }[];
-    serviceQualificationItem: {
-        service: {
-            serviceCharacteristic: { name: string; value: string; }[];
-            serviceSpecification: { id: number; name: string; };
-        }[];
-    }[];
-}
-
-interface PrestaResponseBody {
-    baseType: string;
-    description: string;
-    effectiveQualificationDate: string;
-    estimatedResponseDate: string;
-    externalId: string;
-    href: string;
-    id: string;
-    provideAlternative: boolean;
-    provideOnlyAvailable: boolean;
-    provideUnavailabilityReason: boolean;
-    qualificationResult: 'qualified' | 'alternate' | 'unqualified' | 'error';
-    relatedParty: { id: string }[];
-    serviceQualificationDate: string;
-    serviceQualificationItem: {
-        expectedServiceAvailablilityDate: string;
-        state: string;
-        qualificationItemResult: string;
-        type: string;
-        eligibilityUnavailabilityReason: { code: string; label: string }[];
-        service: {
-            href: string;
-            id: string;
-            serviceCharacteristic: { name: string; value: string }[];
-            serviceSpecification: { id: string; name: string }[];
-            relatedParty: { id: string; name: string; role: string }[];
-        }[];
-        alternateServiceProposal?: {
-            id: string;
-            type: string;
-            service: {
-                id: string;
-                serviceCharacteristic: {
-                    name: string;
-                    value: string;
-                }[];
-            }[];
-        }[];
-    }[];
-    state: string;
-    type: string;
-}
-
-interface AlternativeOption {
-    type?: string,
-    amount?: number,
-    serviceCost?: number,
-    freeServiceCostDays?: number,
-}
-
-interface AlternativeBalanceOption extends AlternativeOption {
-    loanDuration?: number,
-}
-
-interface AlternativePackOption extends AlternativeOption {
-    packId?: string,
-    units?: string,
-    lengthDays?: number,
 }
 
 enum PacksType {
@@ -188,8 +114,6 @@ const execute = async function (req: Request, res: Response) {
                 let ValidationFailed = false;
                 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-
-
                 const response: CaResponse = {
                     mensajeTraducido: '',
                     status: ERROR,
@@ -198,6 +122,8 @@ const execute = async function (req: Request, res: Response) {
 
                 let packRenovResponse;
 
+                let dataExtension: string | null = null;
+                let channel: string | null = null;
                 let packsType: PacksType | null = null;
                 let cellularNumber: string | null = null;
                 let packId: string | null = null;
@@ -206,18 +132,17 @@ const execute = async function (req: Request, res: Response) {
                 let defaultPackId: string | null = null;
                 let defaultPackMessageTemplate: string | null = null;
                 let defaultPackKeyword: string | null = null;
-                // let externalIdPrefix: string | null = null;
                 for (const argument of decoded.inArguments) {
+                    if (argument.dataExtension) dataExtension = argument.dataExtension;
+                    if (argument.channel) channel = argument.channel;
                     if (argument.packsType) packsType = argument.packsType;
                     if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-                    // if (argument.balance !== undefined) clientBalance = Number(argument.balance);
                     if (argument.packId !== undefined) packId = argument.packId;
                     if (argument.packPrice !== undefined) packPrice = Number(argument.packPrice);
                     if (argument.balanceMessageTemplate !== undefined) balanceMessageTemplate = argument.balanceMessageTemplate;
                     if (argument.defaultPackId !== undefined) defaultPackId = argument.defaultPackId;
                     if (argument.defaultPackMessageTemplate !== undefined) defaultPackMessageTemplate = argument.defaultPackMessageTemplate;
                     if (argument.defaultPackKeyword !== undefined) defaultPackKeyword = argument.defaultPackKeyword;
-                    // if (argument.externalIdPrefix !== undefined) externalIdPrefix = argument.externalIdPrefix;
                 }
                 if (
                     !packsType || !cellularNumber ||
@@ -246,66 +171,13 @@ const execute = async function (req: Request, res: Response) {
                     return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
                 }
 
-                // if (!externalIdPrefix) externalIdPrefix = 'CLARO-TEST';
-
-                const prestaRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
-                let requestErrorHappened = false;
-                // const prestaVerificationResponse = await axios.post<PrestaResponseBody>(
-                //     `${PRESTA_API_URL}/serviceQualificationManagement/v3/servicequalification`,
-                //     {
-                //         description: `Service Qualification ${cellularNumber}`,
-                //         externalId: `[${externalIdPrefix}]-${uuid()}`,
-                //         provideAlternative: true,
-                //         provideOnlyAvailable: true,
-                //         provideUnavailabilityReason: true,
-                //         relatedParty: [{ id: cellularNumber }],
-                //         serviceQualificationItem: [
-                //             {
-                //                 service: [
-                //                     {
-                //                         serviceCharacteristic: [
-                //                             {
-                //                                 name: 'channel',
-                //                                 value: 'CPAY',
-                //                             },
-                //                         ],
-                //                         serviceSpecification: {
-                //                             id: 0,
-                //                             name: 'PRESTA',
-                //                         },
-                //                     },
-                //                 ],
-                //             },
-                //         ],
-                //     } as PrestaRequestBody,
-                //     { httpsAgent: new https.Agent({ rejectUnauthorized: false }) },
-                // )
-                //     .catch((error: any) => {
-                //         requestErrorHappened = true;
-                //         prestaRequestDurationTimestamps.end = performance.now();
-                //         if (error.response) {
-                //             const { data, status } = error.response;
-                //             specialConsoleLog(
-                //                 cellularNumber!,
-                //                 'PRESTA_REQUEST_FAILED',
-                //                 prestaRequestDurationTimestamps,
-                //                 { data, status },
-                //             );
-                //             console.log('Error:');
-                //             console.log(`Status: ${status}`);
-                //             console.log(`Data: ${JSON.stringify(data)}`);
-                //         } else console.log(error);
-                //     });
-                // prestaRequestDurationTimestamps.end = performance.now();
-
-
-                const packRenovableApiResponse: { data: RequestBody } | null = await axios({
+                const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
                     method: 'post',
                     url: API_URL,
                     data: {
                         cellularNumber: body.cellularNumber,
                         channel: body.channel
-                    } as RequestBody,
+                    } as PackRenovRequestBody,
                     headers: {
                         Country: API_COUNTRY!,
                         'Session-Id': API_SESSION_ID!
@@ -325,140 +197,9 @@ const execute = async function (req: Request, res: Response) {
                     });
                 if (!packRenovableApiResponse) ValidationFailed = true;
 
-                // if (requestErrorHappened) {
-                //     return res.status(200).send({ ...response, motivo: 'Presta qualification request failed.' } as CaResponse);
-                // }
-                // if (
-                //     typeof(prestaVerificationResponse) === 'undefined' ||
-                //     !prestaVerificationResponse.data ||
-                //     !prestaVerificationResponse.data.qualificationResult
-                // ) {
-                //     return res.status(200).send({
-                //         ...response,
-                //         motivo: 'No data found in presta qualification response.'
-                //     } as CaResponse);
-                // }
-
-                // const prestaQualificationResult = prestaVerificationResponse.data.qualificationResult;
-
                 let message: string | null = null;
-                let prestaIncentivado: string = '';
-                let montoPresta: number = 0;
-                let precioPackIncentivado: number = packPrice;
-
-                // switch (prestaQualificationResult) {
-                // case 'qualified':
-                // case 'alternate':
-                // let serverError: string | null = null
-                // if (!prestaVerificationResponse.data.serviceQualificationItem) {
-                //     serverError = 'Presta response is missing the "serviceQualificationItem" property';
-                // }
-                // if (!prestaVerificationResponse.data.serviceQualificationItem[0]) {
-                //     serverError = 'Presta response is missing elements in the "serviceQualificationItem" property';
-                // }
-                // if (!prestaVerificationResponse.data.serviceQualificationItem[0].alternateServiceProposal) {
-                //     serverError = 'Presta response is missing the "alternateServiceProposal" property';
-                // }
-                // if (serverError) {
-                //     return res.status(200).send({ ...response, motivo: serverError } as CaResponse);
-                // }
-
-                const balanceOptions: AlternativeBalanceOption[] = [];
-                let packOption: AlternativePackOption | null = null;
-
-                // for (const alternateServiceProposal of prestaVerificationResponse.data.serviceQualificationItem[0].alternateServiceProposal!) {
-                //     const alternativeOption: any = {};
-
-                //     for (const serviceCharacteristic of alternateServiceProposal.service[0].serviceCharacteristic) {
-                //         switch (serviceCharacteristic.name) {
-                //             case 'type':
-                //                 alternativeOption.type = serviceCharacteristic.value;
-                //                 break;
-                //             case 'loanDuration':
-                //                 alternativeOption.loanDuration = Number(serviceCharacteristic.value);
-                //                 break;
-                //             case 'amount':
-                //                 const amount = Number(serviceCharacteristic.value);
-                //                 if (typeof amount !== 'number') {
-                //                     return res.status(200).send({
-                //                         ...response,
-                //                         motivo: `Invalid service characteristic 'amount' value: ${serviceCharacteristic.value}`,
-                //                     } as CaResponse);
-                //                 }
-                //                 alternativeOption.amount = Number(serviceCharacteristic.value);
-                //                 break;
-                //             case 'serviceCost':
-                //                 alternativeOption.serviceCost = Number(serviceCharacteristic.value);
-                //                 break;
-                //             case 'freeServiceCostDays':
-                //                 alternativeOption.freeServiceCostDays = Number(serviceCharacteristic.value);
-                //                 break;
-                //             case 'packId':
-                //                 alternativeOption.packId = serviceCharacteristic.value;
-                //                 break;
-                //             case 'units':
-                //                 alternativeOption.units = serviceCharacteristic.value;
-                //                 break;
-                //             case 'lengthDays':
-                //                 alternativeOption.lengthDays = Number(serviceCharacteristic.value);
-                //                 break;
-                //             default:
-                //                 break;
-                //         }
-                //     }
-
-                //     if (alternativeOption.type === 'BALANCES') balanceOptions.push(alternativeOption);
-                //     else if (alternativeOption.type === 'PACKS_DATA') packOption = alternativeOption;
-                // }
-
-                // balanceOptions
-                //     .sort((a, b) => { // Ascendent order
-                //         if (a.amount! < b.amount!) return -1;
-                //         else if (a.amount! > b.amount!) return 1;
-                //         return 0;
-                //     })
-
-                // let optionToEncourage: AlternativeBalanceOption | AlternativePackOption | null = null;
-
-                // if (packsType === PacksType.REN_GIG && packId.substring(0, 2) === 'PR') {
-                //     optionToEncourage = packOption;
-                // } else {
-                //     for (const balanceOption of balanceOptions) {
-                //         if (clientBalance + balanceOption.amount! >= packPrice) {
-                //             optionToEncourage = balanceOption;
-                //             break;
-                //         }
-                //     }
-                // }
-
-                // if (!optionToEncourage) {
-                //     if (!packOption) {
-                //         return res.status(200).send({ ...response, status: CALIFICA_SIN_SALDO } as CaResponse);
-                //     }
-                //     optionToEncourage = packOption;
-                // }
-
                 let messageTemplate: string | null = null;
                 let packIdToSearchFor: string | null = null;
-
-                // if (optionToEncourage.type === 'BALANCES') {
-                //     messageTemplate = balanceMessageTemplate!;
-                //     packIdToSearchFor = packId;
-                //     prestaIncentivado = packId;
-                //     if (optionToEncourage.amount) montoPresta = optionToEncourage.amount;
-                // }
-                // else if (optionToEncourage.type === 'PACKS_DATA') {
-                //     messageTemplate = defaultPackMessageTemplate;
-                //     packIdToSearchFor = defaultPackId;
-                //     prestaIncentivado = defaultPackId;
-                //     if (optionToEncourage.amount) precioPackIncentivado = optionToEncourage.amount;
-                // }
-                // else {
-                //     return res.status(200).send({
-                //         ...response,
-                //         motivo: `Invalid pack type in option to encourage: ${optionToEncourage.type}`,
-                //     } as CaResponse);
-                // }
 
                 const packsFound: {
                     PACK_ID: string,
@@ -466,6 +207,7 @@ const execute = async function (req: Request, res: Response) {
                     VIGENCIA: number,
                     CAPACIDAD_UNIDAD_PACK: string,
                     DESCUENTO: number,
+
                 }[] = await dataSource.getRepository(Pack).query(`
                             select
                                 PACK_ID,
@@ -498,35 +240,17 @@ const execute = async function (req: Request, res: Response) {
                     .replace('#P#', String(PRECIO_FINAL))
                     .replace('#K#', defaultPackKeyword);
 
-                //     break;
-                // case 'unqualified':
-                // case 'error':
-                // return res.status(200).send({
-                //     ...response, status: NO_CALIFICADO, motivo: 'Unqualified or error.'
-                // } as CaResponse);
-                // default:
-                return res.status(200).send({
-                    ...response,
-                    // motivo: `Unknown 'prestaQualificationResult' value: ${prestaQualificationResult}`,
-                } as CaResponse);
-
                 const output: CaResponse = {
                     ...response,
                     mensajeTraducido: message,
                     status: CALIFICADO,
-                    motivo: ''
+                    motivo: '',
+                    packId
                 };
 
+                return res.status(200).send(output);
             }
-        
-
-            return res.status(200).send(output);
-    //     } else {
-    //     console.error('inArguments invalid.');
-    //     return res.status(400).end();
-    // }
-        },
-    );
+  );
 };
 
 const edit = (req: any, res: any) => {
