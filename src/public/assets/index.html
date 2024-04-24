@@ -13,12 +13,15 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script type="text/javascript">
             (function() {
+
                 var config = {
                     baseUrl: 'js'
                 };
+
                 var dependencies = [
                     'customActivity'
                 ];
+
                 require(config, dependencies);
             })();
         </script>
@@ -41,10 +44,29 @@
                         <legend>Canal</legend>
                             <input type="text" name="channel" id="channel" placeholder="Canal" required="" class="text-input">
                     </fieldset>
+                    <fieldset class="content-select">
+                        <legend>Campaña</legend>
+                            <select id="journey">
+                                <option value="cluster">Cluster</option>
+                                <option value="pacman">Pacman</option>
+                                <option value="cashback">Cashback</option>
+                                <option value="promo">Promo</option>
+                                <option value="presta">Presta</option>
+                            </select>
+                            <i></i>
+                    </fieldset>
                 </form>
             </section>
         </div>
+<script>
 
+    const selectJourney = document.getElementById("journey");
+    let journey = 'cluster';
+         
+    selectJourney.addEventListener("change", (event) => {
+        journey =event.target.value;
+    });   
+
+</script>
     </body>
 </html>
-
