@@ -1,4 +1,5 @@
-{   "key": "e06f04b5-a494-4312-983f-35afd1001d4d",
+{
+    "key": "e06f04b5-a494-4312-983f-35afd1001d4d",
     "workflowApiVersion": "1.1",
     "metaData": {
         "icon": "images/icon.png",
@@ -16,14 +17,29 @@
     "arguments": {
         "execute": {
             "inArguments": [
-                { "dataExtension": "" },
-                { "channel": "" }
+                {
+                    "dataExtension": ""
+                },
+                {
+                    "channel": ""
+                }
             ],
             "outArguments": [
-                { "responseCode": ""},
-                {"responseMessage": ""},
-                {"packId": ""},
-                {"handle": ""}
+                {
+                    "responseCode": ""
+                },
+                {
+                    "responseMessage": ""
+                },
+                {
+                    "packId": ""
+                },
+                {
+                    "handle": ""
+                },
+                {
+                    "mensajeTraducido": ""
+                }
             ],
             "url": "DINAMICALLY_REPLACED",
             "headers": "DINAMICALLY_REPLACED",
@@ -33,7 +49,7 @@
             "useJwt": true,
             "timeout": 10000,
             "retryCount": 3,
-			"retryDelay": 10000
+            "retryDelay": 10000
         }
     },
     "configurationArguments": {
@@ -71,7 +87,7 @@
         }
     },
     "schema": {
-        "arguments":{
+        "arguments": {
             "execute": {
                 "inArguments": [
                     {
@@ -84,31 +100,43 @@
                             "dataType": "Text",
                             "isNullable": false,
                             "direction": "in"
+                        },
+                        "cellularNumber": {
+                            "dataType": "Phone",
+                            "isNullable": true,
+                            "direction": "in"
                         }
                     }
                 ],
-                "outArguments": [{
-                    "responseCode": {
-                        "dataType": "Decimal",
-                        "direction": "out",
-                        "access": "visible"
-                    },
-                    "responseMessage": {
-                        "dataType": "Text",
-                        "direction": "out",
-                        "access": "visible"
-                    },
-                    "packId": {
-                        "dataType": "Text",
-                        "direction": "out",
-                        "access": "visible"
-                    },
-                    "handle": {
-                        "dataType": "Decimal",
-                        "direction": "out",
-                        "access": "visible"
+                "outArguments": [
+                    {
+                        "responseCode": {
+                            "dataType": "Decimal",
+                            "direction": "out",
+                            "access": "visible"
+                        },
+                        "responseMessage": {
+                            "dataType": "Text",
+                            "direction": "out",
+                            "access": "visible"
+                        },
+                        "mensajeTraducido": {
+                            "dataType": "Text",
+                            "direction": "out",
+                            "access": "visible"
+                        },
+                        "handle": {
+                            "dataType": "Decimal",
+                            "direction": "out",
+                            "access": "visible"
+                        },
+                        "packId": {
+                            "dataType": "Text",
+                            "direction": "out",
+                            "access": "visible"
+                        }   
                     }
-                }]
+                ]
             }
         }
     }
