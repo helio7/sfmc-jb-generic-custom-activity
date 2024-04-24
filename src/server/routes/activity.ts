@@ -171,6 +171,8 @@ const execute = async function (req: Request, res: Response) {
                     return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
                 }
 
+                
+                console.log('Llamando a API de PR');
                 const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
                     method: 'post',
                     url: API_URL,
@@ -201,6 +203,7 @@ const execute = async function (req: Request, res: Response) {
                 let messageTemplate: string | null = null;
                 let packIdToSearchFor: string | null = null;
 
+                console.log('Llamando packsFound');
                 const packsFound: {
                     PACK_ID: string,
                     PRECIO_FINAL: number,
@@ -224,6 +227,8 @@ const execute = async function (req: Request, res: Response) {
                         ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
                     } as CaResponse);
                 }
+                console.log('Resultado:');
+                console.log(packsFound);
 
                 const {
                     DESCUENTO,
@@ -232,6 +237,7 @@ const execute = async function (req: Request, res: Response) {
                     PRECIO_FINAL,
                 } = packsFound[0];
 
+                console.log('Crea el message');
                 // Verifica que messageTemplate no sea null y sea de tipo string
                 if (messageTemplate && typeof messageTemplate === 'string') {
                     // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
@@ -250,6 +256,9 @@ const execute = async function (req: Request, res: Response) {
                     status: CALIFICADO,
                     motivo: '',
                 };
+
+                console.log('Output:');
+                console.log(output);
 
                 return res.status(200).send(output);
             }
