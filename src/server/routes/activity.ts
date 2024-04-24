@@ -232,25 +232,29 @@ const execute = async function (req: Request, res: Response) {
                     PRECIO_FINAL,
                 } = packsFound[0];
 
-                message = messageTemplate
-                    .trim()
-                    .replace('#D#', String(DESCUENTO))
-                    .replace('#C#', CAPACIDAD_UNIDAD_PACK)
-                    .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
-                    .replace('#P#', String(PRECIO_FINAL))
-                    .replace('#K#', defaultPackKeyword);
+                // Verifica que messageTemplate no sea null y sea de tipo string
+                if (messageTemplate && typeof messageTemplate === 'string') {
+                    // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
+                    message = (messageTemplate as string)
+                        .trim()
+                        .replace('#D#', String(DESCUENTO))
+                        .replace('#C#', CAPACIDAD_UNIDAD_PACK)
+                        .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
+                        .replace('#P#', String(PRECIO_FINAL))
+                        .replace('#K#', defaultPackKeyword);
+                }
 
                 const output: CaResponse = {
                     ...response,
-                    mensajeTraducido: message,
+                    mensajeTraducido: message ?? '',
                     status: CALIFICADO,
                     motivo: '',
-                    packId
                 };
 
                 return res.status(200).send(output);
             }
-  );
+        }
+    );
 };
 
 const edit = (req: any, res: any) => {
