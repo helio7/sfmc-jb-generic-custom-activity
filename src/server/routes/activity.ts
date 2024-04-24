@@ -109,159 +109,159 @@ const execute = async function (req: Request, res: Response) {
                 console.error(err);
                 return res.status(401).end();
             }
-            // if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-            //     const { ERROR, CALIFICA_SIN_SALDO, NO_CALIFICADO, CALIFICADO } = CA_STATUS_RESULT;
-            //     let ValidationFailed = false;
-            //     const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+            if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
+                const { ERROR, CALIFICA_SIN_SALDO, NO_CALIFICADO, CALIFICADO } = CA_STATUS_RESULT;
+                let ValidationFailed = false;
+                const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-            //     const response: CaResponse = {
-            //         mensajeTraducido: '',
-            //         status: ERROR,
-            //         motivo: ''
-            //     };
+                const response: CaResponse = {
+                    mensajeTraducido: '',
+                    status: ERROR,
+                    motivo: ''
+                };
 
-            //     let packRenovResponse;
+                let packRenovResponse;
 
-            //     let dataExtension: string | null = null;
-            //     let channel: string | null = null;
-            //     let packsType: PacksType | null = null;
-            //     let cellularNumber: string | null = null;
-            //     let packId: string | null = null;
-            //     let packPrice: number | null = null;
-            //     let balanceMessageTemplate: string | null = null;
-            //     let defaultPackId: string | null = null;
-            //     let defaultPackMessageTemplate: string | null = null;
-            //     let defaultPackKeyword: string | null = null;
-            //     for (const argument of decoded.inArguments) {
-            //         if (argument.dataExtension) dataExtension = argument.dataExtension;
-            //         if (argument.channel) channel = argument.channel;
-            //         if (argument.packsType) packsType = argument.packsType;
-            //         if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-            //         if (argument.packId !== undefined) packId = argument.packId;
-            //         if (argument.packPrice !== undefined) packPrice = Number(argument.packPrice);
-            //         if (argument.balanceMessageTemplate !== undefined) balanceMessageTemplate = argument.balanceMessageTemplate;
-            //         if (argument.defaultPackId !== undefined) defaultPackId = argument.defaultPackId;
-            //         if (argument.defaultPackMessageTemplate !== undefined) defaultPackMessageTemplate = argument.defaultPackMessageTemplate;
-            //         if (argument.defaultPackKeyword !== undefined) defaultPackKeyword = argument.defaultPackKeyword;
-            //     }
-            //     if (
-            //         !packsType || !cellularNumber ||
-            //         !packId || typeof packPrice !== 'number' ||
-            //         (!balanceMessageTemplate && packsType !== PacksType.REN_GIG && packId.substring(0, 2) !== 'PR') ||
-            //         !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
-            //     ) {
-            //         return res.status(200).send({
-            //             ...response,
-            //             motivo: 'Input parameter is missing.',
-            //             prestaOfertado: packId ? packId : '',
-            //             precioPackOfertado: typeof packPrice !== 'number' ? packPrice : 0,
-            //         } as CaResponse);
-            //     }
+                let dataExtension: string | null = null;
+                let channel: string | null = null;
+                let packsType: PacksType | null = null;
+                let cellularNumber: string | null = null;
+                let packId: string | null = null;
+                let packPrice: number | null = null;
+                let balanceMessageTemplate: string | null = null;
+                let defaultPackId: string | null = null;
+                let defaultPackMessageTemplate: string | null = null;
+                let defaultPackKeyword: string | null = null;
+                for (const argument of decoded.inArguments) {
+                    if (argument.dataExtension) dataExtension = argument.dataExtension;
+                    if (argument.channel) channel = argument.channel;
+                    if (argument.packsType) packsType = argument.packsType;
+                    if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
+                    if (argument.packId !== undefined) packId = argument.packId;
+                    if (argument.packPrice !== undefined) packPrice = Number(argument.packPrice);
+                    if (argument.balanceMessageTemplate !== undefined) balanceMessageTemplate = argument.balanceMessageTemplate;
+                    if (argument.defaultPackId !== undefined) defaultPackId = argument.defaultPackId;
+                    if (argument.defaultPackMessageTemplate !== undefined) defaultPackMessageTemplate = argument.defaultPackMessageTemplate;
+                    if (argument.defaultPackKeyword !== undefined) defaultPackKeyword = argument.defaultPackKeyword;
+                }
+                if (
+                    !packsType || !cellularNumber ||
+                    !packId || typeof packPrice !== 'number' ||
+                    (!balanceMessageTemplate && packsType !== PacksType.REN_GIG && packId.substring(0, 2) !== 'PR') ||
+                    !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
+                ) {
+                    return res.status(200).send({
+                        ...response,
+                        motivo: 'Input parameter is missing.',
+                        prestaOfertado: packId ? packId : '',
+                        precioPackOfertado: typeof packPrice !== 'number' ? packPrice : 0,
+                    } as CaResponse);
+                }
 
-            //     const { UPC, MS, REN_GIG, COM_SCO } = PacksType;
-            //     const {
-            //         API_URL,
-            //         API_SESSION_ID,
-            //         API_COUNTRY
-            //     } = process.env;
+                const { UPC, MS, REN_GIG, COM_SCO } = PacksType;
+                const {
+                    API_URL,
+                    API_SESSION_ID,
+                    API_COUNTRY
+                } = process.env;
 
-            //     if (![UPC, MS, REN_GIG, COM_SCO].includes(packsType)) {
-            //         const errorMessage = `Invalid packs type: ${packsType}`;
-            //         console.log(errorMessage);
-            //         return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
-            //     }
+                if (![UPC, MS, REN_GIG, COM_SCO].includes(packsType)) {
+                    const errorMessage = `Invalid packs type: ${packsType}`;
+                    console.log(errorMessage);
+                    return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
+                }
 
                 
-            //     console.log('Llamando a API de PR');
-            //     const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
-            //         method: 'post',
-            //         url: API_URL,
-            //         data: {
-            //             cellularNumber: body.cellularNumber,
-            //             channel: body.channel
-            //         } as PackRenovRequestBody,
-            //         headers: {
-            //             Country: API_COUNTRY!,
-            //             'Session-Id': API_SESSION_ID!
-            //         },
-            //         httpsAgent,
-            //     })
-            //         .then((res: any) => {
-            //             console.log('Response');
-            //             console.log(res.data);
-            //             packRenovResponse = res.data
-            //             return packRenovResponse;
-            //         })
-            //         .catch((err: any) => {
-            //             console.log('Error:');
-            //             console.log(err);
+                console.log('Llamando a API de PR');
+                const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
+                    method: 'post',
+                    url: API_URL,
+                    data: {
+                        cellularNumber: body.cellularNumber,
+                        channel: body.channel
+                    } as PackRenovRequestBody,
+                    headers: {
+                        Country: API_COUNTRY!,
+                        'Session-Id': API_SESSION_ID!
+                    },
+                    httpsAgent,
+                })
+                    .then((res: any) => {
+                        console.log('Response');
+                        console.log(res.data);
+                        packRenovResponse = res.data
+                        return packRenovResponse;
+                    })
+                    .catch((err: any) => {
+                        console.log('Error:');
+                        console.log(err);
 
-            //         });
-            //     if (!packRenovableApiResponse) ValidationFailed = true;
+                    });
+                if (!packRenovableApiResponse) ValidationFailed = true;
 
-            //     let message: string | null = null;
-            //     let messageTemplate: string | null = null;
-            //     let packIdToSearchFor: string | null = null;
+                let message: string | null = null;
+                let messageTemplate: string | null = null;
+                let packIdToSearchFor: string | null = null;
 
-            //     console.log('Llamando packsFound');
-            //     const packsFound: {
-            //         PACK_ID: string,
-            //         PRECIO_FINAL: number,
-            //         VIGENCIA: number,
-            //         CAPACIDAD_UNIDAD_PACK: string,
-            //         DESCUENTO: number,
+                console.log('Llamando packsFound');
+                const packsFound: {
+                    PACK_ID: string,
+                    PRECIO_FINAL: number,
+                    VIGENCIA: number,
+                    CAPACIDAD_UNIDAD_PACK: string,
+                    DESCUENTO: number,
 
-            //     }[] = await dataSource.getRepository(Pack).query(`
-            //                 select
-            //                     PACK_ID,
-            //                     DESCUENTO,
-            //                     CAPACIDAD_UNIDAD_PACK,
-            //                     VIGENCIA,
-            //                     PRECIO_FINAL
-            //                 from SF_PACKS_TARIFF_PREPAGO
-            //                 where PACK_ID = '${packIdToSearchFor}'
-            //             `);
+                }[] = await dataSource.getRepository(Pack).query(`
+                            select
+                                PACK_ID,
+                                DESCUENTO,
+                                CAPACIDAD_UNIDAD_PACK,
+                                VIGENCIA,
+                                PRECIO_FINAL
+                            from SF_PACKS_TARIFF_PREPAGO
+                            where PACK_ID = '${packIdToSearchFor}'
+                        `);
 
-            //     if (!packsFound.length) {
-            //         return res.status(200).send({
-            //             ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
-            //         } as CaResponse);
-            //     }
-            //     console.log('Resultado:');
-            //     console.log(packsFound);
+                if (!packsFound.length) {
+                    return res.status(200).send({
+                        ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
+                    } as CaResponse);
+                }
+                console.log('Resultado:');
+                console.log(packsFound);
 
-            //     const {
-            //         DESCUENTO,
-            //         CAPACIDAD_UNIDAD_PACK,
-            //         VIGENCIA,
-            //         PRECIO_FINAL,
-            //     } = packsFound[0];
+                const {
+                    DESCUENTO,
+                    CAPACIDAD_UNIDAD_PACK,
+                    VIGENCIA,
+                    PRECIO_FINAL,
+                } = packsFound[0];
 
-            //     console.log('Crea el message');
-            //     // Verifica que messageTemplate no sea null y sea de tipo string
-            //     if (messageTemplate && typeof messageTemplate === 'string') {
-            //         // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
-            //         message = (messageTemplate as string)
-            //             .trim()
-            //             .replace('#D#', String(DESCUENTO))
-            //             .replace('#C#', CAPACIDAD_UNIDAD_PACK)
-            //             .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
-            //             .replace('#P#', String(PRECIO_FINAL))
-            //             .replace('#K#', defaultPackKeyword);
-            //     }
+                console.log('Crea el message');
+                // Verifica que messageTemplate no sea null y sea de tipo string
+                if (messageTemplate && typeof messageTemplate === 'string') {
+                    // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
+                    message = (messageTemplate as string)
+                        .trim()
+                        .replace('#D#', String(DESCUENTO))
+                        .replace('#C#', CAPACIDAD_UNIDAD_PACK)
+                        .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
+                        .replace('#P#', String(PRECIO_FINAL))
+                        .replace('#K#', defaultPackKeyword);
+                }
 
-            //     const output: CaResponse = {
-            //         ...response,
-            //         mensajeTraducido: message ?? '',
-            //         status: CALIFICADO,
-            //         motivo: '',
-            //     };
+                const output: CaResponse = {
+                    ...response,
+                    mensajeTraducido: message ?? '',
+                    status: CALIFICADO,
+                    motivo: '',
+                };
 
-            //     console.log('Output:');
-            //     console.log(output);
+                console.log('Output:');
+                console.log(output);
 
-            //     return res.status(200).send(output);
-            // }
+                return res.status(200).send(output);
+            }
         }
     );
 };
