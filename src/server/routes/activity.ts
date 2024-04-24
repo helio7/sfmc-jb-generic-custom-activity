@@ -68,10 +68,11 @@ interface PackRenovRequestBody {
 }
 
 enum PacksType {
-    REN_GIG = 'ren_gig',
-    UPC = 'upc',
-    MS = 'ms',
-    COM_SCO = 'com_sco',
+    CLUSTER = 'cluster',
+    PACMAN = 'pacman',
+    CASHBACK = 'cashback',
+    PROMO = 'promo',
+    PRESTA = 'presta'
 }
 
 enum CA_STATUS_RESULT {
@@ -147,7 +148,7 @@ const execute = async function (req: Request, res: Response) {
                 if (
                     !packsType || !cellularNumber ||
                     !packId || typeof packPrice !== 'number' ||
-                    (!balanceMessageTemplate && packsType !== PacksType.REN_GIG && packId.substring(0, 2) !== 'PR') ||
+                    (!balanceMessageTemplate && packsType !== PacksType.CLUSTER && packId.substring(0, 2) !== 'PR') ||
                     !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
                 ) {
                     return res.status(200).send({
@@ -158,14 +159,14 @@ const execute = async function (req: Request, res: Response) {
                     } as CaResponse);
                 }
 
-                const { UPC, MS, REN_GIG, COM_SCO } = PacksType;
+                const { PACMAN, CASHBACK, CLUSTER, PROMO } = PacksType;
                 const {
                     API_URL,
                     API_SESSION_ID,
                     API_COUNTRY
                 } = process.env;
 
-                if (![UPC, MS, REN_GIG, COM_SCO].includes(packsType)) {
+                if (![PACMAN, CASHBACK, CLUSTER, PROMO].includes(packsType)) {
                     const errorMessage = `Invalid packs type: ${packsType}`;
                     console.log(errorMessage);
                     return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);

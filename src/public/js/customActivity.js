@@ -1,22 +1,23 @@
 const CONSIDERED_PACK_TYPES = {
-    REN_GIG: 'ren_gig',
-    UPC: 'upc',
-    MS: 'ms',
-    COM_SCO: 'com_sco',
+    CLUSTER: 'cluster',
+    PACMAN: 'pacman',
+    CASHBACK: 'cashback',
+    PROMO: 'promo',
+    PRESTA:'presta'
 };
 
 const DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE = {
-    [CONSIDERED_PACK_TYPES.REN_GIG]: 'renov_gigant',
-    [CONSIDERED_PACK_TYPES.UPC]: 'upc',
-    [CONSIDERED_PACK_TYPES.MS]: 'segmento',
-    [CONSIDERED_PACK_TYPES.COM_SCO]: '1modl_comprdr',
+    [CONSIDERED_PACK_TYPES.CLUSTER]: 'renov_gigant',
+    [CONSIDERED_PACK_TYPES.PACMAN]: 'upc',
+    [CONSIDERED_PACK_TYPES.CASHBACK]: 'segmento',
+    [CONSIDERED_PACK_TYPES.PROMO]: '1modl_comprdr',
 };
 
-const { REN_GIG, UPC, MS, COM_SCO } = CONSIDERED_PACK_TYPES;
+const { CLUSTER, PACMAN, CASHBACK, PROMO } = CONSIDERED_PACK_TYPES;
 
 function getPacksType() {
     let caPacksType;
-    for (const packsType of [REN_GIG, UPC, MS, COM_SCO]) {
+    for (const packsType of [CLUSTER, PACMAN, CASHBACK, PROMO]) {
         if (document.getElementById(`packs-type-${packsType}`).checked) {
             caPacksType = packsType;
             break;
@@ -51,7 +52,7 @@ define(['postmonger'], (Postmonger) => {
         ) ? data.arguments.execute.inArguments : [];
 
         const packsTypeArg = inArguments.find(arg => arg.packsType);
-        let packsTypeIdSuffix = packsTypeArg && packsTypeArg.packsType ? packsTypeArg.packsType : REN_GIG;
+        let packsTypeIdSuffix = packsTypeArg && packsTypeArg.packsType ? packsTypeArg.packsType : CLUSTER;
         if (!packsTypeIdSuffix) throw new Error(`Invalid pack type ID suffix: ${packsTypeIdSuffix}`);
         document.getElementById(`packs-type-${packsTypeIdSuffix}`).checked = true;
 
@@ -91,7 +92,7 @@ define(['postmonger'], (Postmonger) => {
     connection.on('clickedNext', () => {
         const packsType = getPacksType();
 
-        if (![REN_GIG, UPC, MS, COM_SCO].includes(packsType)) throw new Error(`Invalid pack type: ${packsType}`);
+        if (![CLUSTER, PACMAN, CASHBACK, PROMO].includes(packsType)) throw new Error(`Invalid pack type: ${packsType}`);
 
         // let attributeKeyWord = DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE[packsType];
 
