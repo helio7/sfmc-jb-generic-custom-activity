@@ -251,17 +251,17 @@ const execute = async function (req: Request, res: Response) {
                 //         .replace('#K#', defaultPackKeyword);
                 // }
 
-                // const output: CaResponse = {
-                //     ...response,
-                //     mensajeTraducido: message ?? '',
-                //     status: CALIFICADO,
-                //     motivo: '',
-                // };
+                const output: CaResponse = {
+                    ...response,
+                    mensajeTraducido: message ?? '',
+                    status: CALIFICADO,
+                    motivo: '',
+                };
 
-                // console.log('Output:');
-                // console.log(output);
+                console.log('Output:');
+                console.log(output);
 
-                // return res.status(200).send(output);
+                return res.status(200).send(output);
             }
         }
     );
