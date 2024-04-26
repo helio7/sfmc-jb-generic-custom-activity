@@ -198,30 +198,30 @@ const execute = async function (req: Request, res: Response) {
                         console.log(err);
 
                     });
-                // if (!packRenovableApiResponse) ValidationFailed = true;
+                if (!packRenovableApiResponse) ValidationFailed = true;
 
-                // let message: string | null = null;
-                // let messageTemplate: string | null = null;
-                // let packIdToSearchFor: string | null = null;
+                let message: string | null = null;
+                let messageTemplate: string | null = null;
+                let packIdToSearchFor: string | null = null;
 
-                // console.log('Llamando packsFound');
-                // const packsFound: {
-                //     PACK_ID: string,
-                //     PRECIO_FINAL: number,
-                //     VIGENCIA: number,
-                //     CAPACIDAD_UNIDAD_PACK: string,
-                //     DESCUENTO: number,
+                console.log('Llamando packsFound');
+                const packsFound: {
+                    PACK_ID: string,
+                    PRECIO_FINAL: number,
+                    VIGENCIA: number,
+                    CAPACIDAD_UNIDAD_PACK: string,
+                    DESCUENTO: number,
 
-                // }[] = await dataSource.getRepository(Pack).query(`
-                //             select
-                //                 PACK_ID,
-                //                 DESCUENTO,
-                //                 CAPACIDAD_UNIDAD_PACK,
-                //                 VIGENCIA,
-                //                 PRECIO_FINAL
-                //             from SF_PACKS_TARIFF_PREPAGO
-                //             where PACK_ID = '${packIdToSearchFor}'
-                //         `);
+                }[] = await dataSource.getRepository(Pack).query(`
+                            select
+                                PACK_ID,
+                                DESCUENTO,
+                                CAPACIDAD_UNIDAD_PACK,
+                                VIGENCIA,
+                                PRECIO_FINAL
+                            from SF_PACKS_TARIFF_PREPAGO
+                            where PACK_ID = '${packIdToSearchFor}'
+                        `);
 
                 // if (!packsFound.length) {
                 //     return res.status(200).send({
