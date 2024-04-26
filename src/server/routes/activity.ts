@@ -159,109 +159,109 @@ const execute = async function (req: Request, res: Response) {
                     } as CaResponse);
                 }
 
-                const { PACMAN, CASHBACK, CLUSTER, PROMO } = PacksType;
-                const {
-                    API_URL,
-                    API_SESSION_ID,
-                    API_COUNTRY
-                } = process.env;
+                // const { PACMAN, CASHBACK, CLUSTER, PROMO } = PacksType;
+                // const {
+                //     API_URL,
+                //     API_SESSION_ID,
+                //     API_COUNTRY
+                // } = process.env;
 
-                if (![PACMAN, CASHBACK, CLUSTER, PROMO].includes(packsType)) {
-                    const errorMessage = `Invalid packs type: ${packsType}`;
-                    console.log(errorMessage);
-                    return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
-                }
+                // if (![PACMAN, CASHBACK, CLUSTER, PROMO].includes(packsType)) {
+                //     const errorMessage = `Invalid packs type: ${packsType}`;
+                //     console.log(errorMessage);
+                //     return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
+                // }
 
                 
-                console.log('Llamando a API de PR');
-                const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
-                    method: 'post',
-                    url: API_URL,
-                    data: {
-                        cellularNumber: body.cellularNumber,
-                        channel: body.channel
-                    } as PackRenovRequestBody,
-                    headers: {
-                        Country: API_COUNTRY!,
-                        'Session-Id': API_SESSION_ID!
-                    },
-                    httpsAgent,
-                })
-                    .then((res: any) => {
-                        console.log('Response');
-                        console.log(res.data);
-                        packRenovResponse = res.data
-                        return packRenovResponse;
-                    })
-                    .catch((err: any) => {
-                        console.log('Error:');
-                        console.log(err);
+                // console.log('Llamando a API de PR');
+                // const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
+                //     method: 'post',
+                //     url: API_URL,
+                //     data: {
+                //         cellularNumber: body.cellularNumber,
+                //         channel: body.channel
+                //     } as PackRenovRequestBody,
+                //     headers: {
+                //         Country: API_COUNTRY!,
+                //         'Session-Id': API_SESSION_ID!
+                //     },
+                //     httpsAgent,
+                // })
+                //     .then((res: any) => {
+                //         console.log('Response');
+                //         console.log(res.data);
+                //         packRenovResponse = res.data
+                //         return packRenovResponse;
+                //     })
+                //     .catch((err: any) => {
+                //         console.log('Error:');
+                //         console.log(err);
 
-                    });
-                if (!packRenovableApiResponse) ValidationFailed = true;
+                //     });
+                // if (!packRenovableApiResponse) ValidationFailed = true;
 
-                let message: string | null = null;
-                let messageTemplate: string | null = null;
-                let packIdToSearchFor: string | null = null;
+                // let message: string | null = null;
+                // let messageTemplate: string | null = null;
+                // let packIdToSearchFor: string | null = null;
 
-                console.log('Llamando packsFound');
-                const packsFound: {
-                    PACK_ID: string,
-                    PRECIO_FINAL: number,
-                    VIGENCIA: number,
-                    CAPACIDAD_UNIDAD_PACK: string,
-                    DESCUENTO: number,
+                // console.log('Llamando packsFound');
+                // const packsFound: {
+                //     PACK_ID: string,
+                //     PRECIO_FINAL: number,
+                //     VIGENCIA: number,
+                //     CAPACIDAD_UNIDAD_PACK: string,
+                //     DESCUENTO: number,
 
-                }[] = await dataSource.getRepository(Pack).query(`
-                            select
-                                PACK_ID,
-                                DESCUENTO,
-                                CAPACIDAD_UNIDAD_PACK,
-                                VIGENCIA,
-                                PRECIO_FINAL
-                            from SF_PACKS_TARIFF_PREPAGO
-                            where PACK_ID = '${packIdToSearchFor}'
-                        `);
+                // }[] = await dataSource.getRepository(Pack).query(`
+                //             select
+                //                 PACK_ID,
+                //                 DESCUENTO,
+                //                 CAPACIDAD_UNIDAD_PACK,
+                //                 VIGENCIA,
+                //                 PRECIO_FINAL
+                //             from SF_PACKS_TARIFF_PREPAGO
+                //             where PACK_ID = '${packIdToSearchFor}'
+                //         `);
 
-                if (!packsFound.length) {
-                    return res.status(200).send({
-                        ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
-                    } as CaResponse);
-                }
-                console.log('Resultado:');
-                console.log(packsFound);
+                // if (!packsFound.length) {
+                //     return res.status(200).send({
+                //         ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
+                //     } as CaResponse);
+                // }
+                // console.log('Resultado:');
+                // console.log(packsFound);
 
-                const {
-                    DESCUENTO,
-                    CAPACIDAD_UNIDAD_PACK,
-                    VIGENCIA,
-                    PRECIO_FINAL,
-                } = packsFound[0];
+                // const {
+                //     DESCUENTO,
+                //     CAPACIDAD_UNIDAD_PACK,
+                //     VIGENCIA,
+                //     PRECIO_FINAL,
+                // } = packsFound[0];
 
-                console.log('Crea el message');
-                // Verifica que messageTemplate no sea null y sea de tipo string
-                if (messageTemplate && typeof messageTemplate === 'string') {
-                    // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
-                    message = (messageTemplate as string)
-                        .trim()
-                        .replace('#D#', String(DESCUENTO))
-                        .replace('#C#', CAPACIDAD_UNIDAD_PACK)
-                        .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
-                        .replace('#P#', String(PRECIO_FINAL))
-                        .replace('#K#', defaultPackKeyword);
-                }
+                // console.log('Crea el message');
+                // // Verifica que messageTemplate no sea null y sea de tipo string
+                // if (messageTemplate && typeof messageTemplate === 'string') {
+                //     // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
+                //     message = (messageTemplate as string)
+                //         .trim()
+                //         .replace('#D#', String(DESCUENTO))
+                //         .replace('#C#', CAPACIDAD_UNIDAD_PACK)
+                //         .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
+                //         .replace('#P#', String(PRECIO_FINAL))
+                //         .replace('#K#', defaultPackKeyword);
+                // }
 
-                const output: CaResponse = {
-                    ...response,
-                    mensajeTraducido: message ?? '',
-                    status: CALIFICADO,
-                    motivo: '',
-                };
+                // const output: CaResponse = {
+                //     ...response,
+                //     mensajeTraducido: message ?? '',
+                //     status: CALIFICADO,
+                //     motivo: '',
+                // };
 
-                console.log('Output:');
-                console.log(output);
+                // console.log('Output:');
+                // console.log(output);
 
-                return res.status(200).send(output);
+                // return res.status(200).send(output);
             }
         }
     );
