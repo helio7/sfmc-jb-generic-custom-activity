@@ -75,17 +75,15 @@ enum PacksType {
     PRESTA = 'presta'
 }
 
-enum CA_STATUS_RESULT {
-    ERROR = 'error',
-    CALIFICADO = 'Calificado',
-    NO_CALIFICADO = 'No Calificado',
-    CALIFICA_SIN_SALDO = 'Califica sin saldo',
-}
+// enum CA_STATUS_RESULT {
+//     ERROR = 'error',
+//     CALIFICADO = 'Calificado',
+//     NO_CALIFICADO = 'No Calificado',
+//     CALIFICA_SIN_SALDO = 'Califica sin saldo',
+// }
 
 interface CaResponse {
-    mensajeTraducido: string,
-    status: CA_STATUS_RESULT,
-    motivo: string
+    mensajeTraducido: string
 }
 
 const execute = async function (req: Request, res: Response) {
@@ -111,14 +109,11 @@ const execute = async function (req: Request, res: Response) {
                 return res.status(401).end();
             }
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-                const { ERROR, CALIFICA_SIN_SALDO, NO_CALIFICADO, CALIFICADO } = CA_STATUS_RESULT;
                 let ValidationFailed = false;
                 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
                 const response: CaResponse = {
-                    mensajeTraducido: '',
-                    status: ERROR,
-                    motivo: ''
+                    mensajeTraducido: ''
                 };
 
                 let packRenovResponse;
@@ -152,10 +147,7 @@ const execute = async function (req: Request, res: Response) {
                     !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
                 ) {
                     return res.status(200).send({
-                        ...response,
-                        motivo: 'Input parameter is missing.',
-                        prestaOfertado: packId ? packId : '',
-                        precioPackOfertado: typeof packPrice !== 'number' ? packPrice : 0,
+                        ...response
                     } as CaResponse);
                 }
 
@@ -200,11 +192,12 @@ const execute = async function (req: Request, res: Response) {
                     });
                 if (!packRenovableApiResponse) ValidationFailed = true;
 
+
                 let message: string | null = null;
                 let messageTemplate: string | null = null;
                 let packIdToSearchFor: string | null = null;
 
-                // console.log('Llamando packsFound');
+                console.log('Llamando packsFound');
                 // const packsFound: {
                 //     PACK_ID: string,
                 //     PRECIO_FINAL: number,
@@ -212,7 +205,8 @@ const execute = async function (req: Request, res: Response) {
                 //     CAPACIDAD_UNIDAD_PACK: string,
                 //     DESCUENTO: number,
 
-                // }[] = await dataSource.getRepository(Pack).query(`
+                // }[]
+                //  = await dataSource.getRepository(Pack).query(`
                 //             select
                 //                 PACK_ID,
                 //                 DESCUENTO,
@@ -238,24 +232,22 @@ const execute = async function (req: Request, res: Response) {
                 //     PRECIO_FINAL,
                 // } = packsFound[0];
 
-                // console.log('Crea el message');
-                // // Verifica que messageTemplate no sea null y sea de tipo string
-                // if (messageTemplate && typeof messageTemplate === 'string') {
-                //     // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
-                //     message = (messageTemplate as string)
-                //         .trim()
-                //         .replace('#D#', String(DESCUENTO))
-                //         .replace('#C#', CAPACIDAD_UNIDAD_PACK)
-                //         .replace('#V#', `${VIGENCIA} ${VIGENCIA > 1 ? 'dias' : 'dia'}`)
-                //         .replace('#P#', String(PRECIO_FINAL))
-                //         .replace('#K#', defaultPackKeyword);
-                // }
+                console.log('Crea el message');
+                // Verifica que messageTemplate no sea null y sea de tipo string
+                if (messageTemplate && typeof messageTemplate === 'string') {
+                    // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
+                    message = (messageTemplate as string)
+                        .trim()
+                        .replace('#D#', "test")
+                        .replace('#C#', "test")
+                        .replace('#V#', `${"test"} ${1 > 1 ? 'dias' : 'dia'}`)
+                        .replace('#P#', String("test"))
+                        .replace('#K#', defaultPackKeyword);
+                }
 
                 const output: CaResponse = {
                     ...response,
-                    mensajeTraducido: message ?? '',
-                    status: CALIFICADO,
-                    motivo: '',
+                    mensajeTraducido: message ?? ''
                 };
 
                 console.log('Output:');
