@@ -172,7 +172,6 @@ const execute = async function (req: Request, res: Response) {
                         }
                     }
                     
-                    
                     let brokerStatus = false;
                     if (!loginFailed) {
                         brokerStatus = !!(loginResponse && loginResponse.data);
@@ -184,7 +183,7 @@ const execute = async function (req: Request, res: Response) {
                         requestBody,
                         {
                             headers: {
-                                Authorization: `Bearer ${token}`,  // Configuración del token
+                                Authorization: `Bearer ${token}`,
                                 apikey : RCS_API_KEY
                             }
                         }
@@ -192,11 +191,26 @@ const execute = async function (req: Request, res: Response) {
                     .catch((error) => {
                         sendRcsRequestDurationTimestamps.end = performance.now();
                         if (error.response) {
+                            brokerStatus = true;
                             console.log('BROKER_REQUEST_FAILED')
                         }
                     });
                     
-                    console.log('sendRcsResponse:',sendRcsResponse);
+                    if (!brokerStatus && sendRcsResponse) {
+                        const { data, status, statusText} = sendRcsResponse;
+                    
+                        console.log('status:',status);
+                        console.log('message:',data.message);
+                        console.log('response_code:',data.response_code);
+
+                        if (status === 200 && statusText !== 'OK') {
+                            console.log('BROKER_REQUEST_FAILED')
+                            loginFailed = true;
+                        }
+                         else {
+                            console.log('BROKER_REQUEST_SUCCESS')
+                        }
+                    }
                     
                     const output = {
                         brokerStatus: brokerStatus
