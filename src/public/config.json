@@ -21,8 +21,7 @@
                 { "cellularNumber": "" }
             ],
             "outArguments": [
-                { "brokerStatus": false },
-                { "Sender": "" }
+                { "rcsSendStatus": false }
             ],
             "url": "DINAMICALLY_REPLACED",
             "headers": "DINAMICALLY_REPLACED",
@@ -93,7 +92,7 @@
                     }
                 ],
                 "outArguments": [{
-                    "brokerStatus": {
+                    "rcsSendStatus": {
                         "dataType": "Boolean",
                         "direction": "out",
                         "access": "visible"
