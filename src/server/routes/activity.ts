@@ -178,6 +178,8 @@ const execute = async function (req: Request, res: Response) {
 
                     if (!loginFailed) {
                         brokerStatus = !!(loginResponse && loginResponse.data);
+                        console.log("loginFailed false")
+
                     }
 
                     const sendRcsRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
@@ -203,14 +205,13 @@ const execute = async function (req: Request, res: Response) {
                     console.log("brokerStatus:",brokerStatus)
 
 
-                    if (sendRcsResponse) {
-                        const { data, status, statusText} = sendRcsResponse;
+                    if (!loginFailed && sendRcsResponse) {
+                        const { data, status} = sendRcsResponse;
                     
                         console.log('status:',status);
-                        console.log('message:',data.message);
                         console.log('response_code:',data.response_code);
 
-                        if (status === 200 && statusText !== 'OK') {
+                        if (status === 200 && data.response_code !== 0) {
                             console.log('BROKER_REQUEST_FAILED')
                             loginFailed = true;
                         }
