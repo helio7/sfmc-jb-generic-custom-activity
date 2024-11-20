@@ -148,16 +148,22 @@ const execute = async function (req: Request, res: Response) {
                     let loginFailed = !loginResponse ? true : false;
                     
                     if (!loginFailed && loginResponse) {
-                        const { data, status } = loginResponse;
+                        const { data, status, statusText,  } = loginResponse;
 
-                        let token = loginResponse.data.token
-                        
-                        console.log('loginResponse token:',loginResponse.data.token);
-                        console.log('loginResponse token:',token);
+                        let token = data.data.token
+
                         console.log('status:',status);
-                        console.log('statusText:',data.statusText);
+                        console.log('statusText:',statusText);
+                        console.log('data:',data);
+                        console.log('data.data:',data.data);
+                        console.log('data.data.token:',data.data.token);
+                        console.log('token:',token);
 
-                        if (status === 200 && data.statusText !== 0) {
+
+
+
+
+                        if (status === 200 && statusText !== 'OK') {
                             console.log('BROKER_REQUEST_FAILED')
                             loginFailed = true;
                         }
