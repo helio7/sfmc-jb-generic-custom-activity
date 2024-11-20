@@ -1,39 +1,17 @@
-const CONSIDERED_PACK_TYPES = {
-    CLUSTER: 'cluster',
-    PACMAN: 'pacman',
-    CASHBACK: 'cashback',
-    PROMO: 'promo',
-    PRESTA:'presta'
-};
-
-const DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE = {
-    [CONSIDERED_PACK_TYPES.CLUSTER]: 'renov_gigant',
-    [CONSIDERED_PACK_TYPES.PACMAN]: 'upc',
-    [CONSIDERED_PACK_TYPES.CASHBACK]: 'segmento',
-    [CONSIDERED_PACK_TYPES.PROMO]: '1modl_comprdr',
-};
-
-const { CLUSTER, PACMAN, CASHBACK, PROMO } = CONSIDERED_PACK_TYPES;
-
-function getPacksType() {
-    let caPacksType;
-    for (const packsType of [CLUSTER, PACMAN, CASHBACK, PROMO]) {
-        if (document.getElementById(`packs-type-${packsType}`).checked) {
-            caPacksType = packsType;
-            break;
-        }
-    }
-    return caPacksType;
-}
+let connection;
 
 define(['postmonger'], (Postmonger) => {
     'use strict';
 
-    let connection = new Postmonger.Session();
-    let activity = {};
+    let $ = jQuery.noConflict(); // Evitar conflicto con otras versiones de jQuery
+    connection = new Postmonger.Session();
+    let activity;
+
+    // Configuration variables
     let eventDefinitionKey;
 
     $(window).ready(() => {
+        // JB will respond the first time 'ready' is called with 'initActivity'
         connection.trigger('ready');
         connection.trigger('requestTokens');
         connection.trigger('requestEndpoints');
@@ -51,87 +29,92 @@ define(['postmonger'], (Postmonger) => {
             data.arguments.execute.inArguments.length > 0
         ) ? data.arguments.execute.inArguments : [];
 
-        const packsTypeArg = inArguments.find(arg => arg.packsType);
-        let packsTypeIdSuffix = packsTypeArg && packsTypeArg.packsType ? packsTypeArg.packsType : CLUSTER;
-        if (!packsTypeIdSuffix) throw new Error(`Invalid pack type ID suffix: ${packsTypeIdSuffix}`);
-        document.getElementById(`packs-type-${packsTypeIdSuffix}`).checked = true;
-
         const dataExtensionArg = inArguments.find(arg => arg.dataExtension);
         if (dataExtensionArg) document.getElementById('dataExtension').value = dataExtensionArg.dataExtension;
 
-        const channelArg = inArguments.find(arg => arg.channel);
-        if (channelArg) document.getElementById('channel').value = channelArg.channel;
-
-        const externalIdPrefixArg = inArguments.find(arg => arg.externalIdPrefix);
-        if (externalIdPrefixArg) document.getElementById('externalIdPrefix').value = externalIdPrefixArg.externalIdPrefix;
     });
 
-    let saldoCustomActivityKey;
-
     connection.on('requestedInteraction', (payload) => {
-        payload.activities.forEach((a) => {
-            if (
-                a.schema &&
-                a.schema.arguments &&
-                a.schema.arguments.execute &&
-                a.schema.arguments.execute.outArguments &&
-                a.schema.arguments.execute.outArguments.length > 0
-            ) {
-                for (const outArg of a.schema.arguments.execute.outArguments) {
-                    if (outArg.saldo) {
-                        saldoCustomActivityKey = a.key;
+        caMode = 'dependent'
+        if (caMode === 'dependent') {    
+
+            if (activity.arguments.execute.inArguments) {
+                let existingSelection;
+                for (const inArgument of activity.arguments.execute.inArguments) {
+                    if (inArgument.mensajeTraducido) {
+                        existingSelection = inArgument.mensajeTraducido;
                         break;
                     }
                 }
+                if (existingSelection && existingSelection.split(".").length == 3) selectedValue = existingSelection.split(".")[1];
             }
-        });
-        // Let Journey Builder know the activity has changes.
-        // connection.trigger("setActivityDirtyState", true);
+            // Populate the select dropdown.
+            const selectElement = document.getElementById("messageActivity");
+            var options = document.querySelectorAll('#messageActivity option');
+            options.forEach(o => o.remove());
+
+            payload.activities.forEach((a) => {
+                if (
+                    a.schema &&
+                    a.schema.arguments &&
+                    a.schema.arguments.execute &&
+                    a.schema.arguments.execute.outArguments &&
+                    a.schema.arguments.execute.outArguments.length > 0
+                ) {
+                    a.schema.arguments.execute.outArguments.forEach((inArg) => {
+                        if (inArg.mensajeTraducido) {
+                        let option = document.createElement("option");
+                        option.text = `${a.name} - (${a.key})`;
+                        option.value = a.key;
+                        selectElement.add(option);
+                        }
+                    });
+                }
+            });
+            if (selectElement.childElementCount > 0) {
+                // If we have a previously selected value, repopulate that value.
+                if (selectedValue) {
+                    const selectOption = selectElement.querySelector(`[value='${selectedValue}']`);
+                    if (selectOption) selectOption.selected = true;
+                    else console.log("Could not select value from list", `[value='${selectedValue}]'`);
+                }
+                // Let Journey Builder know the activity has changes.
+                connection.trigger("setActivityDirtyState", true);
+            }
+        }
     });
 
-    connection.on('clickedNext', () => {
-        const packsType = getPacksType();
-
-        if (![CLUSTER, PACMAN, CASHBACK, PROMO].includes(packsType)) throw new Error(`Invalid pack type: ${packsType}`);
-
-        // let attributeKeyWord = DATA_EXTENSION_ATTRIBUTE_KEYWORDS_BY_PACK_TYPE[packsType];
+    connection.on('clickedNext', () => { // Save function within MC.
 
         const dataExtension = document.getElementById('dataExtension').value;
-        const channel = document.getElementById('channel').value;
-
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
-        const balance = `{{Interaction.${saldoCustomActivityKey}.saldo}}`;
-        const packId = `{{Contact.Attribute."${dataExtension}".pack_renov_gigant_final}}`; //Gigante renovable
-        const packPrice = `{{Contact.Attribute."${dataExtension}".pack_renov_gigant_msj_price}}`; //Gigante renovable
-        const balanceMessageTemplate = `{{Contact.Attribute."${dataExtension}".pack_renov_gigant_msj}}`; //Gigante renovable
-        
-        const defaultPackId = `{{Contact.Attribute."${dataExtension}".pack_prestado_final}}`;
-        const defaultPackMessageTemplate = `{{Contact.Attribute."${dataExtension}".pack_prestado_msj}}`; 
-        const defaultPackKeyword = `{{Contact.Attribute."${dataExtension}".pack_prestado_kw}}`;
-
-        const externalIdPrefix = document.getElementById('externalIdPrefix').value;
+        const idTemplate = `{{Contact.Attribute."${dataExtension}".id_template}}`;
 
         activity['arguments'].execute.inArguments = [
             { dataExtension: dataExtension ? dataExtension : null },
-            { channel: channel ? channel : null },
-            { packsType: packsType ? packsType : null },
-            { cellularNumber: cellularNumber ? cellularNumber : null },
-            { balance: balance ? balance : null },
-            { packId: packId ? packId : null },
-            { packPrice: packPrice ? packPrice : null},
-            { balanceMessageTemplate: balanceMessageTemplate ? balanceMessageTemplate : null },
-            { defaultPackId: defaultPackId ? defaultPackId : null },
-            { defaultPackMessageTemplate: defaultPackMessageTemplate ? defaultPackMessageTemplate : null },
-            { defaultPackKeyword: defaultPackKeyword ? defaultPackKeyword : null },
-            { externalIdPrefix: externalIdPrefix ? externalIdPrefix : null },
+            { idTemplate: idTemplate ? idTemplate : null },
+            { cellularNumber: cellularNumber ? cellularNumber : null }
         ];
 
         activity['metaData'].isConfigured = true;
         connection.trigger('updateActivity', activity);
     });
 
+    /**
+     * This function is to pull out the event definition within journey builder.
+     * With the eventDefinitionKey, you are able to pull out values that passes through the journey
+     */
     connection.on('requestedTriggerEventDefinition', (eventDefinitionModel) => {
         console.log("Requested TriggerEventDefinition", eventDefinitionModel.eventDefinitionKey);
         if (eventDefinitionModel) eventDefinitionKey = eventDefinitionModel.eventDefinitionKey;
     });
 });
+
+function setSendAction() {
+    connection.trigger('requestInteraction');
+}
+
+function setSaveAction() {
+    connection.trigger('requestInteraction');
+}
+

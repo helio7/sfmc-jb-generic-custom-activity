@@ -1,12 +1,7 @@
 'use strict';
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import { performance } from "perf_hooks";
 import { verify } from 'jsonwebtoken';
-import uuid from 'uuid-random';
-import https from 'https';
-import axios from 'axios';
-import { dataSource } from "../app-data-source";
-import { Pack } from "../entities/pack.entity";
 
 interface ExecuteLog {
     body: any;
@@ -50,9 +45,17 @@ const logData = (req: Request) => {
     });
 }
 
+import axios from 'axios';
+interface RequestBody {
+    username: string;
+    password: string;
+    campaign_id: string;
+    execution_id: string;
+    msisdn: string;
+}
 interface InputParamenter {
     cellularNumber?: string;
-    dataExtension?: string;
+    idTemplate?: string;
 }
 interface DecodedBody {
     inArguments?: InputParamenter[];
@@ -60,30 +63,6 @@ interface DecodedBody {
 interface DurationTimestampsPair {
     start: number | null;
     end: number | null;
-}
-
-interface PackRenovRequestBody {
-    cellularNumber: number;
-    channel: string;
-}
-
-enum PacksType {
-    CLUSTER = 'cluster',
-    PACMAN = 'pacman',
-    CASHBACK = 'cashback',
-    PROMO = 'promo',
-    PRESTA = 'presta'
-}
-
-// enum CA_STATUS_RESULT {
-//     ERROR = 'error',
-//     CALIFICADO = 'Calificado',
-//     NO_CALIFICADO = 'No Calificado',
-//     CALIFICA_SIN_SALDO = 'Califica sin saldo',
-// }
-
-interface CaResponse {
-    mensajeTraducido: string
 }
 
 const execute = async function (req: Request, res: Response) {
@@ -103,159 +82,116 @@ const execute = async function (req: Request, res: Response) {
         body.toString('utf8'),
         JWT_SECRET,
         { algorithms: ['HS256'], complete: false },
-        async (err: any, decoded?: any) => {
+        async (err, decoded?) => {
             if (err) {
                 console.error(err);
                 return res.status(401).end();
             }
+
+
+            if (
+                typeof decoded === 'object' &&
+                decoded !== null &&
+                'inArguments' in decoded &&
+                Array.isArray((decoded as any).inArguments)
+            ){
+            const inArguments = (decoded as { inArguments: InputParamenter[] }).inArguments;
+
+            let RCSREQUEST = true;
+
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-                let ValidationFailed = false;
-                const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-
-                const response: CaResponse = {
-                    mensajeTraducido: ''
-                };
-
-                let packRenovResponse;
-
-                let dataExtension: string | null = null;
-                let channel: string | null = null;
-                let packsType: PacksType | null = null;
+                const requestBody : Partial<RequestBody> = {username : 'api-claro-argentina', password : 'wFB4255u'}
                 let cellularNumber: string | null = null;
-                let packId: string | null = null;
-                let packPrice: number | null = null;
-                let balanceMessageTemplate: string | null = null;
-                let defaultPackId: string | null = null;
-                let defaultPackMessageTemplate: string | null = null;
-                let defaultPackKeyword: string | null = null;
+                let idTemplate: string | null = null;
                 for (const argument of decoded.inArguments) {
-                    if (argument.dataExtension) dataExtension = argument.dataExtension;
-                    if (argument.channel) channel = argument.channel;
-                    if (argument.packsType) packsType = argument.packsType;
                     if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-                    if (argument.packId !== undefined) packId = argument.packId;
-                    if (argument.packPrice !== undefined) packPrice = Number(argument.packPrice);
-                    if (argument.balanceMessageTemplate !== undefined) balanceMessageTemplate = argument.balanceMessageTemplate;
-                    if (argument.defaultPackId !== undefined) defaultPackId = argument.defaultPackId;
-                    if (argument.defaultPackMessageTemplate !== undefined) defaultPackMessageTemplate = argument.defaultPackMessageTemplate;
-                    if (argument.defaultPackKeyword !== undefined) defaultPackKeyword = argument.defaultPackKeyword;
+                    else if (argument.idTemplate) idTemplate = argument.idTemplate;
                 }
+
                 if (
-                    !packsType || !cellularNumber ||
-                    !packId || typeof packPrice !== 'number' ||
-                    (!balanceMessageTemplate && packsType !== PacksType.CLUSTER && packId.substring(0, 2) !== 'PR') ||
-                    !defaultPackId || !defaultPackMessageTemplate || !defaultPackKeyword
-                ) {
-                    return res.status(200).send({
-                        ...response
-                    } as CaResponse);
-                }
+                    !cellularNumber ||
+                    !idTemplate 
+                ) return res.status(400).send(`Input parameter is missing.`);
 
-                const { PACMAN, CASHBACK, CLUSTER, PROMO } = PacksType;
-                const {
-                    API_URL,
-                    API_SESSION_ID,
-                    API_COUNTRY
-                } = process.env;
+                if (RCSREQUEST = true) {
+                    const { env: { RCS_SMS_API_URL, RCS_API_KEY } } = process;
+                    const loginRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
 
-                if (![PACMAN, CASHBACK, CLUSTER, PROMO].includes(packsType)) {
-                    const errorMessage = `Invalid packs type: ${packsType}`;
-                    console.log(errorMessage);
-                    return res.status(200).end({ ...response, motivo: errorMessage } as CaResponse);
-                }
+                    let URL = RCS_SMS_API_URL
 
-                
-                console.log('Llamando a API de PR');
-                const packRenovableApiResponse: { data: PackRenovRequestBody } | null = await axios({
-                    method: 'post',
-                    url: API_URL,
-                    data: {
-                        cellularNumber: body.cellularNumber,
-                        channel: body.channel
-                    } as PackRenovRequestBody,
-                    headers: {
-                        Country: API_COUNTRY!,
-                        'Session-Id': API_SESSION_ID!
-                    },
-                    httpsAgent,
-                })
-                    .then((res: any) => {
-                        console.log('Response');
-                        console.log(res.data);
-                        packRenovResponse = res.data
-                        return packRenovResponse;
-                    })
-                    .catch((err: any) => {
-                        console.log('Error:');
-                        console.log(err);
-
+                    const loginResponse = await axios.post(
+                        `${URL}/auth/login`,
+                        requestBody,
+                        {
+                            headers: {
+                                apikey : RCS_API_KEY
+                            }
+                        }
+                    )
+                    .catch((error) => {
+                        loginRequestDurationTimestamps.end = performance.now();
+                        if (error.response) {
+                            console.log('BROKER_REQUEST_FAILED')
+                        }
                     });
-                if (!packRenovableApiResponse) ValidationFailed = true;
+                    
+                    console.log('loginResponse:',loginResponse);
+                    //console.log('loginResponse:',response.data.access_token);
 
 
-                let message: string | null = null;
-                let messageTemplate: string | null = null;
-                let packIdToSearchFor: string | null = null;
+                    loginRequestDurationTimestamps.end = performance.now();
+                    let loginFailed = !loginResponse ? true : false;
+                    
+                    if (!loginFailed && loginResponse) {
+                        const { data, status } = loginResponse;
 
-                console.log('Llamando packsFound');
-                // const packsFound: {
-                //     PACK_ID: string,
-                //     PRECIO_FINAL: number,
-                //     VIGENCIA: number,
-                //     CAPACIDAD_UNIDAD_PACK: string,
-                //     DESCUENTO: number,
+                        if (status === 200 && data.responseCode !== 0) {
+                            console.log('BROKER_REQUEST_FAILED')
+                            loginFailed = true;
+                        }
+                         else {
+                            console.log('BROKER_REQUEST_SUCCESS')
+                        }
+                    }
+                    
+                    let brokerStatus = false;
+                    if (!loginFailed) {
+                        brokerStatus = !!(loginResponse && loginResponse.data);
+                    }
+                    
+                    // const sendRcsRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+                    // const sendRcsResponse = await axios.post(
+                    //     `${URL}/api/od_campaign`,
+                    //     requestBody,
+                    //     {
+                    //         headers: {
+                    //             Authorization: `Bearer ${token}`,  // Configuración del token
+                    //             apikey : RCS_API_KEY
+                    //         }
+                    //     }
+                    // )
+                    // .catch((error) => {
+                    //     sendRcsRequestDurationTimestamps.end = performance.now();
+                    //     if (error.response) {
+                    //         console.log('BROKER_REQUEST_FAILED')
+                    //     }
+                    // });
+                    
+                    // console.log('sendRcsResponse:',sendRcsResponse);
+                    
+                    const output = {
+                        brokerStatus: brokerStatus
+                    };
+                    
+                    return res.status(200).send(output);
+                    
+                } 
 
-                // }[]
-                //  = await dataSource.getRepository(Pack).query(`
-                //             select
-                //                 PACK_ID,
-                //                 DESCUENTO,
-                //                 CAPACIDAD_UNIDAD_PACK,
-                //                 VIGENCIA,
-                //                 PRECIO_FINAL
-                //             from SF_PACKS_TARIFF_PREPAGO
-                //             where PACK_ID = '${packIdToSearchFor}'
-                //         `);
-
-                // if (!packsFound.length) {
-                //     return res.status(200).send({
-                //         ...response, motivo: `Pack ${packIdToSearchFor} not found in DB.`
-                //     } as CaResponse);
-                // }
-                // console.log('Resultado:');
-                // console.log(packsFound);
-
-                // const {
-                //     DESCUENTO,
-                //     CAPACIDAD_UNIDAD_PACK,
-                //     VIGENCIA,
-                //     PRECIO_FINAL,
-                // } = packsFound[0];
-
-                console.log('Crea el message');
-                // Verifica que messageTemplate no sea null y sea de tipo string
-                if (messageTemplate && typeof messageTemplate === 'string') {
-                    // Usa el operador 'as' para forzar el tipo de messageTemplate a 'string'
-                    message = (messageTemplate as string)
-                        .trim()
-                        .replace('#D#', "test")
-                        .replace('#C#', "test")
-                        .replace('#V#', `${"test"} ${1 > 1 ? 'dias' : 'dia'}`)
-                        .replace('#P#', String("test"))
-                        .replace('#K#', defaultPackKeyword);
-                }
-
-                const output: CaResponse = {
-                    ...response,
-                    mensajeTraducido: message ?? ''
-                };
-
-                console.log('Output:');
-                console.log(output);
-
-                return res.status(200).send(output);
+            }} else {
+                console.error('inArguments invalid.');
+                return res.status(400).end();
             }
-        }
+        },
     );
 };
 

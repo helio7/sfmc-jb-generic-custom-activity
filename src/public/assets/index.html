@@ -1,72 +1,50 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Consulta de pack pendiente </title>
-        <meta charset="utf-8" />
-        <meta http-equiv="x-ua-compatible" content="ie-edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
-        <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel='stylesheet' href="css/styles.css">
-        <script type="text/javascript" src="js/require.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script type="text/javascript">
-            (function() {
+<html lang="es">
 
-                var config = {
-                    baseUrl: 'js'
-                };
+<head>
+    <title>Envío de RCS</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie-edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel='stylesheet' href="css/styles.css">
+    <script data-main="js/customActivity" src="../js/require.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="js/require.js"></script>
+    <script> var $jq = jQuery.noConflict(); </script>
+    <script type="text/javascript">
+        (function () {
 
-                var dependencies = [
-                    'customActivity'
-                ];
+            var config = {
+                baseUrl: 'js'
+            };
+            var dependencies = [
+                'customActivity'
+            ];
+            require(config, dependencies);
+        })();
 
-                require(config, dependencies);
-            })();
-        </script>
-    </head>
-    <body>
-        <div class="main-block">
-            <header>
-                <img src="img/logo-white-claro.svg">
-                <h3>TEST ------ CONSULTA PR PENDIENTE</h3>
-            </header>
-                    
-            <section id="content">
-                <p>Consulta si una línea tiene un pack renovable pendiente.</p>    
-                <form action="/">
-                    <fieldset>
-                        <legend>Data Extension</legend>
-                            <input type="text" name="dataExtension" id="dataExtension" placeholder="Nombre de DE" required="" class="text-input">
-                    </fieldset>
-                    <fieldset>
-                        <legend>Canal</legend>
-                            <input type="text" name="channel" id="channel" placeholder="Canal" required="" class="text-input">
-                    </fieldset>
-                    <fieldset class="content-select">
-                        <legend>Campaña</legend>
-                            <select id="journey">
-                                <option value="cluster">Cluster</option>
-                                <option value="pacman">Pacman</option>
-                                <option value="cashback">Cashback</option>
-                                <option value="promo">Promo</option>
-                                <option value="presta">Presta</option>
-                            </select>
-                            <i></i>
-                    </fieldset>
-                </form>
-            </section>
-        </div>
-<script>
+    </script>
+</head>
 
-    const selectJourney = document.getElementById("journey");
-    let journey = 'cluster';
-         
-    selectJourney.addEventListener("change", (event) => {
-        journey =event.target.value;
-    });   
-
-</script>
-    </body>
+<body>
+    <div class="main-block">
+        <header>
+            <img src="./images/logo-white-claro.svg"  alt="">
+            <h3>ENVÍO RCS</h3>
+        </header>
+        <section id="content">
+            <form action="/">
+                <fieldset>
+                    <legend>Data Extension</legend>
+                    <input type="text" name="dataExtension" id="dataExtension" placeholder="Nombre de la Data Extension"
+                        style="width: 95%;" required="" class="text-input">
+                </fieldset>
+            </form>
+        </section>
+    </div>
+</body>
 </html>
