@@ -100,7 +100,14 @@ const execute = async function (req: Request, res: Response) {
             let RCSREQUEST = true;
 
             if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-                const requestBody : Partial<RequestBody> = {username : 'api-claro-argentina', password : 'wFB4255u'}
+                const requestBody : Partial<RequestBody> = 
+                {
+                    username : 'api-claro-argentina',
+                    password :'wFB4255u',
+                    campaign_id:'a23c1fde-adea-46e4-a22a-d6c35b4fe31c',
+                    execution_id:'4122370d-d27c-46c1-8336-7339371a2fe6',
+                    msisdn: '5491121806490'
+                }
                 let cellularNumber: string | null = null;
                 let idTemplate: string | null = null;
                 for (const argument of decoded.inArguments) {
@@ -142,26 +149,19 @@ const execute = async function (req: Request, res: Response) {
                         }
                     });
                     
-                    //console.log('loginResponse:',loginResponse);
-
                     loginRequestDurationTimestamps.end = performance.now();
                     let loginFailed = !loginResponse ? true : false;
                     
-                    if (!loginFailed && loginResponse) {
-                        const { data, status, statusText,  } = loginResponse;
+                    let token;
 
-                        let token = data.data.token
+                    if (!loginFailed && loginResponse) {
+                        const { data, status, statusText} = loginResponse;
+
+                        token = data.data.token
 
                         console.log('status:',status);
                         console.log('statusText:',statusText);
-                        console.log('data:',data);
-                        console.log('data.data:',data.data);
-                        console.log('data.data.token:',data.data.token);
                         console.log('token:',token);
-
-
-
-
 
                         if (status === 200 && statusText !== 'OK') {
                             console.log('BROKER_REQUEST_FAILED')
@@ -172,30 +172,31 @@ const execute = async function (req: Request, res: Response) {
                         }
                     }
                     
+                    
                     let brokerStatus = false;
                     if (!loginFailed) {
                         brokerStatus = !!(loginResponse && loginResponse.data);
                     }
                     
-                    // const sendRcsRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
-                    // const sendRcsResponse = await axios.post(
-                    //     `${URL}/api/od_campaign`,
-                    //     requestBody,
-                    //     {
-                    //         headers: {
-                    //             Authorization: `Bearer ${token}`,  // Configuración del token
-                    //             apikey : RCS_API_KEY
-                    //         }
-                    //     }
-                    // )
-                    // .catch((error) => {
-                    //     sendRcsRequestDurationTimestamps.end = performance.now();
-                    //     if (error.response) {
-                    //         console.log('BROKER_REQUEST_FAILED')
-                    //     }
-                    // });
+                    const sendRcsRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+                    const sendRcsResponse = await axios.post(
+                        `${URL}/api/od_campaign`,
+                        requestBody,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,  // Configuración del token
+                                apikey : RCS_API_KEY
+                            }
+                        }
+                    )
+                    .catch((error) => {
+                        sendRcsRequestDurationTimestamps.end = performance.now();
+                        if (error.response) {
+                            console.log('BROKER_REQUEST_FAILED')
+                        }
+                    });
                     
-                    // console.log('sendRcsResponse:',sendRcsResponse);
+                    console.log('sendRcsResponse:',sendRcsResponse);
                     
                     const output = {
                         brokerStatus: brokerStatus
