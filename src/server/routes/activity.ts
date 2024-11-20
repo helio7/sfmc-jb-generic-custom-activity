@@ -119,6 +119,13 @@ const execute = async function (req: Request, res: Response) {
 
                     let URL = RCS_SMS_API_URL
 
+                    console.log('RCS_SMS_API_URL:',RCS_SMS_API_URL);
+                    console.log('URL:',URL);
+                    console.log('RCS_SMS_API_URL:',RCS_API_KEY);
+                    console.log('cellularNumber:',cellularNumber);
+                    console.log('idTemplate:',idTemplate);
+                    console.log('requestBody:',requestBody);
+
                     const loginResponse = await axios.post(
                         `${URL}/auth/login`,
                         requestBody,
