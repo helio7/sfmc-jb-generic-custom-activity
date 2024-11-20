@@ -142,9 +142,7 @@ const execute = async function (req: Request, res: Response) {
                         }
                     });
                     
-                    console.log('loginResponse:',loginResponse);
-                    //console.log('loginResponse:',response.data.access_token);
-
+                    //console.log('loginResponse:',loginResponse);
 
                     loginRequestDurationTimestamps.end = performance.now();
                     let loginFailed = !loginResponse ? true : false;
@@ -152,7 +150,14 @@ const execute = async function (req: Request, res: Response) {
                     if (!loginFailed && loginResponse) {
                         const { data, status } = loginResponse;
 
-                        if (status === 200 && data.responseCode !== 0) {
+                        let token = loginResponse.data.token
+                        
+                        console.log('loginResponse token:',loginResponse.data.token);
+                        console.log('loginResponse token:',token);
+                        console.log('status:',status);
+                        console.log('statusText:',data.statusText);
+
+                        if (status === 200 && data.statusText !== 0) {
                             console.log('BROKER_REQUEST_FAILED')
                             loginFailed = true;
                         }
