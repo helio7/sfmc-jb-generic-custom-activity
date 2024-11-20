@@ -95,6 +95,7 @@ const execute = async function (req: Request, res: Response) {
                 'inArguments' in decoded &&
                 Array.isArray((decoded as any).inArguments)
             ){
+
             const inArguments = (decoded as { inArguments: InputParamenter[] }).inArguments;
 
             let RCSREQUEST = true;
@@ -127,11 +128,9 @@ const execute = async function (req: Request, res: Response) {
                     let URL = RCS_SMS_API_URL
 
                     console.log('RCS_SMS_API_URL:',RCS_SMS_API_URL);
-                    console.log('URL:',URL);
-                    console.log('RCS_SMS_API_URL:',RCS_API_KEY);
+                    console.log('RCS_API_KEY:',RCS_API_KEY);
                     console.log('cellularNumber:',cellularNumber);
                     console.log('idTemplate:',idTemplate);
-                    console.log('requestBody:',requestBody);
 
                     const loginResponse = await axios.post(
                         `${URL}/auth/login`,
@@ -145,9 +144,10 @@ const execute = async function (req: Request, res: Response) {
                     .catch((error) => {
                         loginRequestDurationTimestamps.end = performance.now();
                         if (error.response) {
-                            console.log('BROKER_REQUEST_FAILED')
+                            console.log('FAILED Post Login')
                         }
                     });
+                    console.log("Post Login")
                     
                     loginRequestDurationTimestamps.end = performance.now();
                     let loginFailed = !loginResponse ? true : false;
@@ -173,10 +173,13 @@ const execute = async function (req: Request, res: Response) {
                     }
                     
                     let brokerStatus = false;
+
+                    console.log("loginFailed:",loginFailed)
+
                     if (!loginFailed) {
                         brokerStatus = !!(loginResponse && loginResponse.data);
                     }
-                    
+
                     const sendRcsRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
                     const sendRcsResponse = await axios.post(
                         `${URL}/api/od_campaign`,
@@ -195,8 +198,12 @@ const execute = async function (req: Request, res: Response) {
                             console.log('BROKER_REQUEST_FAILED')
                         }
                     });
-                    
-                    if (!brokerStatus && sendRcsResponse) {
+
+                    console.log("sendRcsResponse:",sendRcsResponse)
+                    console.log("brokerStatus:",brokerStatus)
+
+
+                    if (sendRcsResponse) {
                         const { data, status, statusText} = sendRcsResponse;
                     
                         console.log('status:',status);
