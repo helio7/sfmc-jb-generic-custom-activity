@@ -88,11 +88,11 @@ define(['postmonger'], (Postmonger) => {
 
         const dataExtension = document.getElementById('dataExtension').value;
         const cellularNumber = `{{Contact.Attribute."${dataExtension}".cellular_number}}`;
-        const idTemplate = `{{Contact.Attribute."${dataExtension}".id_template}}`;
+        const idCampaing = `{{Contact.Attribute."${dataExtension}".campaing_id}}`;
 
         activity['arguments'].execute.inArguments = [
             { dataExtension: dataExtension ? dataExtension : null },
-            { idTemplate: idTemplate ? idTemplate : null },
+            { idCampaing: idCampaing ? idCampaing : null },
             { cellularNumber: cellularNumber ? cellularNumber : null }
         ];
 

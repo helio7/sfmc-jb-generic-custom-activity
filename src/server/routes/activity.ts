@@ -54,7 +54,7 @@ interface RequestBody {
 }
 interface InputParamenter {
     cellularNumber?: string;
-    idTemplate?: string;
+    idCampaing?: string;
 }
 interface DecodedBody {
     inArguments?: InputParamenter[];
@@ -99,36 +99,35 @@ const execute = async function (req: Request, res: Response) {
                 let RCSREQUEST = true;
 
                 if (decoded && decoded.inArguments && decoded.inArguments.length > 0) {
-                    const requestBody: Partial<RequestBody> =
-                    {
-                        username: 'api-claro-argentina',
-                        password: 'wFB4255u',
-                        campaign_id: 'a23c1fde-adea-46e4-a22a-d6c35b4fe31c',
-                        execution_id: '4122370d-d27c-46c1-8336-7339371a2fe6',
-                        msisdn: '5491121806490'
-                    }
 
                     let cellularNumber: string | null = null;
-                    let idTemplate: string | null = null;
+                    let idCampaing: string | null = null;
 
                     for (const argument of decoded.inArguments) {
                         if (argument.cellularNumber) cellularNumber = argument.cellularNumber;
-                        else if (argument.idTemplate) idTemplate = argument.idTemplate;
+                        else if (argument.idCampaing) idCampaing = argument.idCampaing;
                     }
-                    if (
-                        !cellularNumber ||
-                        !idTemplate
+                    if (!cellularNumber || !idCampaing
                     ) return res.status(400).send(`Input parameter is missing.`);
 
-                    const { env: { RCS_SMS_API_URL, RCS_API_KEY } } = process;
-                    const loginRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
+                    const { env: { RCS_SMS_API_URL, RCS_API_KEY, USERNAME, PASSWORD, EXECUTION_ID } } = process;
 
+                    const requestBody: Partial<RequestBody> =
+                    {
+                        username: USERNAME,
+                        password: PASSWORD,
+                        campaign_id: idCampaing,
+                        execution_id: EXECUTION_ID,
+                        msisdn: cellularNumber
+                    }
+
+                    const loginRequestDurationTimestamps: DurationTimestampsPair = { start: performance.now(), end: null };
                     let URL = RCS_SMS_API_URL
 
                     console.log('RCS_SMS_API_URL:', RCS_SMS_API_URL);
                     console.log('RCS_API_KEY:', RCS_API_KEY);
                     console.log('cellularNumber:', cellularNumber);
-                    console.log('idTemplate:', idTemplate);
+                    console.log('idCampaing:', idCampaing);
 
                     console.log('---Post Login---');
 
